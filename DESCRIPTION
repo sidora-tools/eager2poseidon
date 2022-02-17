@@ -1,12 +1,21 @@
 Package: eager2poseidon
-Title: What the Package Does (One Line, Title Case)
+Title: Automatically fill in Missing Metadata in a Janno File
 Version: 0.0.0.9000
 Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
-License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
-    license
+    person("Thiseas Christos", "Lamnidis", , "thiseas_christos_lamnidis@eva.mpg.de", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0003-4485-8570"))
+Description: Fills in the janno file of a Poseidon package with information from Pandora and the eager output of the run that generated the data.
+License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2
+Imports: 
+    DBI,
+    dplyr,
+    magrittr,
+    poseidonR,
+    sidora.core,
+    tidyselect
+Remotes: 
+    sidora-tools/sidora.core
+    poseidon-framework/poseidonR
