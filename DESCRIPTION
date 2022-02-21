@@ -14,7 +14,12 @@ Imports:
     dplyr,
     magrittr,
     poseidonR,
+    readr,
+    rlang,
     sidora.core,
+    stats,
+    tibble,
+    tidyr,
     tidyselect
 Remotes: 
     sidora-tools/sidora.core
