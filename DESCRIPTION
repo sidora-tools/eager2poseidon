@@ -22,5 +22,5 @@ Imports:
     tidyr,
     tidyselect
 Remotes: 
-    sidora-tools/sidora.core
+    sidora-tools/sidora.core,
     poseidon-framework/poseidonR
