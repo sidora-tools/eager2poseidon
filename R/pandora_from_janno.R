@@ -19,7 +19,7 @@ import_pandora_data <- function(sample_ids, credentials, trust_uncalibrated_date
     ## Only keep individual and site information
     dplyr::select(
       tidyselect::starts_with(
-        c('site.','individual.')
+        c("site.", "individual.")
       )
     ) %>%
     ## Remove duplicate lines due to multiple Extracts/Libs/Sequencings per individual

@@ -102,8 +102,8 @@ read_eager_tsv <- function(eager_tsv_fn, prefer = "none") {
 #' @return character. A valid Poseidon Capture_Type, Library_Built, or UDG value.
 #'
 format_for_poseidon <- function(x, field) {
-  if (! field %in% c("Library_Built", "UDG", "Capture_Type")) {
-    stop(paste0(field," is not an acceptable field for format_for_poseidon()."))
+  if (!field %in% c("Library_Built", "UDG", "Capture_Type")) {
+    stop(paste0(field, " is not an acceptable field for format_for_poseidon()."))
   }
 
   if (field == "Capture_Type") {
@@ -148,28 +148,31 @@ format_for_poseidon <- function(x, field) {
 #' collapse_for_poseidon("ds;ds;ds", "Library_Built") ## Unique repeated library build
 #' collapse_for_poseidon("ds;ss;ds", "Library_Built") ## Non-unique library builds
 #'
-#' collapse_for_poseidon("minus;minus;minus", "UDG")  ## Unique repeated UDG treatment
-#' collapse_for_poseidon("minus;half;plus", "UDG")   ## Non-unique UDG treatment
-
+#' collapse_for_poseidon("minus;minus;minus", "UDG") ## Unique repeated UDG treatment
+#' collapse_for_poseidon("minus;half;plus", "UDG") ## Non-unique UDG treatment
 collapse_for_poseidon <- function(x, field) {
-  if (! field %in% c("Library_Built", "UDG")) {
-    stop(paste0(field," is not an acceptable field for collapse_for_poseidon()."))
+  if (!field %in% c("Library_Built", "UDG")) {
+    stop(paste0(field, " is not an acceptable field for collapse_for_poseidon()."))
   }
 
   if (field == "Library_Built") {
-    uniques <- strsplit(x, ";") %>% unlist() %>% unique()
+    uniques <- strsplit(x, ";") %>%
+      unlist() %>%
+      unique()
     result <- dplyr::case_when(
       ## Need to select the first unique to avoid errors when there are multiple.
-      grepl(";", x) ~ dplyr::if_else(length(uniques) > 1, 'mixed', uniques[1]),
+      grepl(";", x) ~ dplyr::if_else(length(uniques) > 1, "mixed", uniques[1]),
       TRUE ~ x
     )
   }
 
   if (field == "UDG") {
-    uniques <- strsplit(x, ";") %>% unlist() %>% unique()
+    uniques <- strsplit(x, ";") %>%
+      unlist() %>%
+      unique()
     result <- dplyr::case_when(
       ## Need to select the first unique to avoid errors when there are multiple.
-      grepl(";", x) ~ dplyr::if_else(length(uniques) > 1, 'mixed', uniques[1]),
+      grepl(";", x) ~ dplyr::if_else(length(uniques) > 1, "mixed", uniques[1]),
       TRUE ~ x
     )
   }

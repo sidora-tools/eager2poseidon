@@ -18,9 +18,9 @@ fill_in_janno <- function(input_janno, external_results_table) {
   ## Set individual order so it matches the input janno
   ind_order <- dplyr::pull(input_janno, .data$Poseidon_ID)
 
-  output_janno <- dplyr::full_join(input_janno, external_results_table, by="Poseidon_ID") %>%
+  output_janno <- dplyr::full_join(input_janno, external_results_table, by = "Poseidon_ID") %>%
     dplyr::mutate(
-      Collection_ID = dplyr::coalesce(.data$Collection_ID.x , .data$Collection_ID.y),
+      Collection_ID = dplyr::coalesce(.data$Collection_ID.x, .data$Collection_ID.y),
       Country = dplyr::coalesce(.data$Country.x, .data$Country.y),
       Site = dplyr::coalesce(.data$Site.x, .data$Site.y),
       Location = dplyr::coalesce(.data$Location.x, .data$Location.y),
@@ -87,12 +87,9 @@ fill_in_janno <- function(input_janno, external_results_table) {
     ) %>%
     ## Set the order so it matches the input janno
     dplyr::mutate(
-      Poseidon_ID = factor(.data$Poseidon_ID, levels=ind_order)
+      Poseidon_ID = factor(.data$Poseidon_ID, levels = ind_order)
     ) %>%
     dplyr::arrange(.data$Poseidon_ID)
-                           #%>%
-    ## Finally, convert NAs to "n/a"s
-    #tidyr::replace_na("n/a")
 
   return(output_janno)
 }
@@ -110,9 +107,8 @@ standardise_janno <- function(janno_fn) {
   ## Read janno and normalise column names for Individual/Poseidon IDs
   input_janno <- poseidonR::read_janno(janno_fn, to_janno = F, validate = F) %>%
     dplyr::mutate(
-      # dplyr::across(any_of(c("Poseidon_ID", "Individual_ID")), .fn = factor(., levels=unique(.))),
       dplyr::across(
-        .cols=tidyselect::any_of(c(
+        .cols = tidyselect::any_of(c(
           "Date_C14_Uncal_BP",
           "Date_C14_Uncal_BP_Err",
           "Date_BC_AD_Median",
@@ -123,10 +119,10 @@ standardise_janno <- function(janno_fn) {
           "Nr_Libraries",
           "Nr_SNPs"
         )),
-        .fn=as.integer
+        .fn = as.integer
       ),
       dplyr::across(
-        .cols=tidyselect::any_of(c(
+        .cols = tidyselect::any_of(c(
           "Latitude",
           "Longitude",
           "Coverage_1240K",
@@ -135,7 +131,7 @@ standardise_janno <- function(janno_fn) {
           "Endogenous",
           "Coverage_on_Target_SNPs"
         )),
-        .fn=as.numeric
+        .fn = as.numeric
       )
     )
 
@@ -168,12 +164,11 @@ standardise_janno <- function(janno_fn) {
 #' @return A tibble with the collected results from Pandora and eager.
 #' @export
 #'
-collate_external_results <- function(sample_ids, eager_tsv_fn, general_stats_fn, credentials, prefer = 'none', trust_uncalibrated_dates = F) {
-
+collate_external_results <- function(sample_ids, eager_tsv_fn, general_stats_fn, credentials, prefer = "none", trust_uncalibrated_dates = F) {
   pandora_table <- import_pandora_data(sample_ids, credentials, trust_uncalibrated_dates)
   eager_table <- import_eager_results(eager_tsv_fn, general_stats_fn, prefer)
 
-  external_results <- dplyr::full_join(pandora_table, eager_table, by=c("Poseidon_ID"="Sample_Name"))
+  external_results <- dplyr::full_join(pandora_table, eager_table, by = c("Poseidon_ID" = "Sample_Name"))
 
   return(external_results)
 }
