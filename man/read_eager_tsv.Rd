@@ -4,10 +4,10 @@
 \alias{read_eager_tsv}
 \title{Read content of an eager TSV and convert information to poseidon janno columns}
 \usage{
-read_eager_tsv(eager_tsv, prefer = "none")
+read_eager_tsv(eager_tsv_fn, prefer = "none")
 }
 \arguments{
-\item{eager_tsv}{character. Path to the TSV file used as input for the eager run.}
+\item{eager_tsv_fn}{character. Path to the TSV file used as input for the eager run.}
 
 \item{prefer}{character. Can be set to "none", "single", or "double".
 If set to 'single; or 'double', will keep only information for libraries with the specified strandedness.

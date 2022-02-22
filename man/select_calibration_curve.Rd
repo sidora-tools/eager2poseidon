@@ -16,10 +16,9 @@ A string with the preferred calibration curve (intcal20 for northern hemisphere 
 Pick a calibration curve for
 }
 \examples{
-select_calibration_curve(-50)  ## Northern hemisphere
-select_calibration_curve(50)   ## Southern Hemisphere
-select_calibration_curve(0)    ## 0 defaults to Northern hemisphere
-
+select_calibration_curve(-50) ## Northern hemisphere
+select_calibration_curve(50) ## Southern Hemisphere
+select_calibration_curve(0) ## 0 defaults to Northern hemisphere
 \dontrun{
 select_calibration_curve("banana")
 }

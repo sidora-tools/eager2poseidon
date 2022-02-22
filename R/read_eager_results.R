@@ -2,22 +2,23 @@ if (getRversion() >= "2.15.1") utils::globalVariables(c(".")) ## Disables notes 
 
 #' Collect poseidon janno data from an eager TSV and its corresponding general stats table.
 #'
-#' @param eager_tsv character. Path to the TSV file used as input for the eager run.
-#' @param general_stats_fn character. Path to the root eager output dir (`--outdir`) of the eager run.
+#' @param eager_tsv_fn character. Path to the TSV file used as input for the eager run.
+#' @param general_stats_fn character. Path to the MultiQC general stats table.
+#' Can be found in multiqc/multiqc_data/multiqc_general_stats.txt within the specified eager output directory (`--outdir`).
 #' @param prefer character. Can be set to "none", "single", or "double".
 #' If set to 'single; or 'double', will keep only information for libraries with the specified strandedness.
 #' If 'none', all information is retained.
 #'
-#' @return A tibble containing the poseidon janno fields of Nr_Libraries, Capture_Type, UDG, Library_Built, Damage, Nr_SNPs, Endogenous_DNA, Contamination,
+#' @return A tibble containing the poseidon janno fields of Nr_Libraries, Capture_Type, UDG, Library_Built, Damage, Nr_SNPs, Endogenous, Contamination,
 #' Contamination_Err, Contamination_Meas, and Contamination_Note
 #'
 #' @export
 #' @importFrom rlang .data
 #' @importFrom magrittr "%>%"
 
-import_eager_results <- function(eager_tsv, general_stats_fn, prefer) {
+import_eager_results <- function(eager_tsv_fn, general_stats_fn, prefer) {
   ## Parse TSV
-  tsv_data <- read_eager_tsv(eager_tsv, prefer)
+  tsv_data <- read_eager_tsv(eager_tsv_fn, prefer)
   write("Parsing of eager input TSV completed.", file = stderr())
 
   ## Parse general stats table
@@ -33,8 +34,8 @@ import_eager_results <- function(eager_tsv, general_stats_fn, prefer) {
       Nr_Libraries = dplyr::n(),
       Capture_Type = paste(.data$Seq_Type, collapse = ";"),
       ## UDG gets formatted here to account for 'mixed' UDG treatment when multiple libs of the same strandedness have different UDG treatment.
-      UDG = paste(.data$UDG_Treatment, collapse = ";") %>% format_for_poseidon(., "UDG"),
-      Library_Built = paste(.data$Strandedness, collapse = ";")
+      UDG = paste(.data$UDG_Treatment, collapse = ";") %>% collapse_for_poseidon(., "UDG"),
+      Library_Built = paste(.data$Strandedness, collapse = ";") %>% collapse_for_poseidon(., "Library_Built")
     ) %>%
     dplyr::full_join(eager_data, by = c("Sample_Name" = "Sample"))
 
@@ -52,15 +53,15 @@ import_eager_results <- function(eager_tsv, general_stats_fn, prefer) {
 #' @export
 #' @importFrom magrittr "%>%"
 
-read_eager_tsv <- function(eager_tsv, prefer = "none") {
+read_eager_tsv <- function(eager_tsv_fn, prefer = "none") {
   ## End execution if TSV file is not found
-  if (!file.exists(eager_tsv)) {
-    stop(paste0("File '", eager_tsv, "' not found."))
+  if (!file.exists(eager_tsv_fn)) {
+    stop(paste0("File '", eager_tsv_fn, "' not found."))
   }
   if (!prefer %in% c("none", "single", "double")) {
-    stop(paste0("Invalid library strandedness preference: '", eager_tsv, "'"))
+    stop(paste0("Invalid library strandedness preference: '", eager_tsv_fn, "'"))
   }
-  tsv_data <- readr::read_tsv(eager_tsv, col_types = "cciiccccccc") %>%
+  tsv_data <- readr::read_tsv(eager_tsv_fn, col_types = "cciiccccccc") %>%
     dplyr::select(.data$Sample_Name, .data$Library_ID, .data$Strandedness, .data$UDG_Treatment, .data$R1, .data$R2, .data$BAM)
   ## Filter for preferred library strandedness
   if (prefer != "none") {
@@ -84,7 +85,8 @@ read_eager_tsv <- function(eager_tsv, prefer = "none") {
         ## Finally, a catch-all, just in case we have unexpected behaviours
         TRUE ~ NA_character_
       ),
-      Strandedness = format_for_poseidon(.data$Strandedness, "Library_Built")
+      Strandedness = format_for_poseidon(.data$Strandedness, "Library_Built"),
+      UDG_Treatment = format_for_poseidon(.data$UDG_Treatment, "UDG")
     ) %>%
     dplyr::select(-c(.data$R1, .data$R2, .data$BAM)) %>%
     dplyr::distinct()
@@ -94,12 +96,16 @@ read_eager_tsv <- function(eager_tsv, prefer = "none") {
 
 #' Internal function to convert information from eager lingo to poseidon accepted strings
 #'
-#' @param x character. A sequencing ID.
+#' @param x character. A string to format from eager language to poseidon language.
 #' @param field character. The field to format for. One of 'UDG', 'Library_Built', or 'Capture_Type'.
 #'
 #' @return character. A valid Poseidon Capture_Type, Library_Built, or UDG value.
 #'
 format_for_poseidon <- function(x, field) {
+  if (! field %in% c("Library_Built", "UDG", "Capture_Type")) {
+    stop(paste0(field," is not an acceptable field for format_for_poseidon()."))
+  }
+
   if (field == "Capture_Type") {
     result <- dplyr::case_when(
       x == "SG" ~ "Shotgun",
@@ -127,13 +133,56 @@ format_for_poseidon <- function(x, field) {
   result
 }
 
+#' Collapse value for poseidon janno
+#'
+#' Takes a comples ';' separated value of UDG or Library_Built and returns the appropriate j
+#' anno value to summarise that dataset in the provided field.
+#'
+#' @param x character. A collapsed, poseidon-formatted string of Library builds or UDG treatments.
+#' @param field character. The field to format for. One of 'UDG', 'Library_Built'
+#'
+#' @return character. Either the unique repeated element in the collapsed string, or 'mixed'.
+#' @export
+#'
+#' @examples
+#' collapse_for_poseidon("ds;ds;ds", "Library_Built") ## Unique repeated library build
+#' collapse_for_poseidon("ds;ss;ds", "Library_Built") ## Non-unique library builds
+#'
+#' collapse_for_poseidon("minus;minus;minus", "UDG")  ## Unique repeated UDG treatment
+#' collapse_for_poseidon("minus;half;plus", "UDG")   ## Non-unique UDG treatment
+
+collapse_for_poseidon <- function(x, field) {
+  if (! field %in% c("Library_Built", "UDG")) {
+    stop(paste0(field," is not an acceptable field for collapse_for_poseidon()."))
+  }
+
+  if (field == "Library_Built") {
+    uniques <- strsplit(x, ";") %>% unlist() %>% unique()
+    result <- dplyr::case_when(
+      ## Need to select the first unique to avoid errors when there are multiple.
+      grepl(";", x) ~ dplyr::if_else(length(uniques) > 1, 'mixed', uniques[1]),
+      TRUE ~ x
+    )
+  }
+
+  if (field == "UDG") {
+    uniques <- strsplit(x, ";") %>% unlist() %>% unique()
+    result <- dplyr::case_when(
+      ## Need to select the first unique to avoid errors when there are multiple.
+      grepl(";", x) ~ dplyr::if_else(length(uniques) > 1, 'mixed', uniques[1]),
+      TRUE ~ x
+    )
+  }
+  result
+}
+
 #' Extract poseidon information from the general stats table of a run
 #'
 #' @inheritParams import_eager_results
 #'
 #' @param tsv_data A tibble containing information from the eager TSV. Created with \link[eager2poseidon:read_eager_tsv]{read_eager_tsv}
 #'
-#' @return A tibble containing the poseidon janno fields of Damage, Nr_SNPs, Endogenous_DNA, Contamination,
+#' @return A tibble containing the poseidon janno fields of Damage, Nr_SNPs, Endogenous, Contamination,
 #' Contamination_Err, Contamination_Meas, and Contamination_Note
 #' @export
 #' @importFrom magrittr "%>%"
@@ -174,14 +223,14 @@ read_eager_stats_table <- function(general_stats_fn, tsv_data) {
   ## For endogenous, only look at Shotgun libraries. If none exist return "n/a"s
   if (nrow(tsv_data %>% dplyr::filter(.data$Seq_Type == "Shotgun")) == 0) {
     samples <- unique(tsv_data$Sample_Name)
-    endogenous <- rep("n/a", length(samples))
-    endogenous_per_sample <- tibble::tibble(Sample = samples, Endogenous_DNA = endogenous)
+    endogenous <- rep(NA_real_, length(samples))
+    endogenous_per_sample <- tibble::tibble(Sample = samples, Endogenous = endogenous)
   } else {
     endogenous_per_sample <- dplyr::right_join(general_stats, tsv_data %>% dplyr::filter(.data$Seq_Type == "Shotgun"), by = c("Sample" = "Library_ID")) %>%
       tidyr::separate(.data$Sample, sep = "\\.", into = c("Sample", "Library"), fill = "right", extra = "merge") %>%
       dplyr::group_by(.data$Sample) %>%
       dplyr::summarise(
-        Endogenous_DNA = format(max(.data$endogenous_dna), nsmall = 2, digits = 0)
+        Endogenous = max(.data$endogenous_dna)
       )
   }
 

@@ -1,38 +1,35 @@
 #' Collect poseidon janno data from pandora
 #'
-#' @param janno A tibble Path to the source .janno file. Passed to \link[poseidonR:janno]{read_janno}
 #' @param credentials character. Path to a credentials file containing four lines listing the database host,
 #' the port of the database server, user and password, respectively.
 #' Passed to \link[sidora.core:get_pandora_connection]{get_pandora_connection}
 #' @param trust_uncalibrated_dates logical. Should any uncalibrated dates in pandora be trusted?
 #' If set to TRUE, then \link[poseidonR:quickcalibrate]{quickcalibrate()} is used to calibrate these dates on the fly.
+#' @param sample_ids character. A vector of the Poseidon_IDs to pull from pandora.
 #'
 #' @return A tibble containing the poseidon janno fields of
 #' @export
 #'
 #' @importFrom magrittr "%>%"
 
-import_pandora_data <- function(janno, credentials, trust_uncalibrated_dates) {
-  ## Read janno
-  input_janno <- poseidonR::read_janno(janno, to_janno = F, validate = TRUE)
-  sample_ids <- input_janno %>%
-    dplyr::select(tidyselect::any_of(c("Individual_ID", "Poseidon_ID")))
-  ## Rename to Individual_ID to Poseidon_ID if the janno is from an older Poseidon version. Throw warning.
-  if (names(sample_ids) == "Individual_ID") {
-    warning("Your janno file appears to be from an older poseidon version. It will be updated to poseidon version '2.5.0'.")
-    ## Change column name in imported janno and sample names
-    input_janno <- input_janno %>% dplyr::rename("Poseidon_ID" = "Individual_ID")
-    names(sample_ids) <- c("Poseidon_ID")
-  }
-
+import_pandora_data <- function(sample_ids, credentials, trust_uncalibrated_dates) {
   write("Querying Pandora for individual data.", file = stderr())
   pandora_table <- get_individual_pandora_data(sample_ids, credentials)
   pandora_table <- pandora_table %>%
+    ## Only keep individual and site information
+    dplyr::select(
+      tidyselect::starts_with(
+        c('site.','individual.')
+      )
+    ) %>%
+    ## Remove duplicate lines due to multiple Extracts/Libs/Sequencings per individual
+    dplyr::distinct() %>%
     dplyr::mutate(
       Poseidon_ID = .data$individual.Full_Individual_Id,
       Collection_ID = .data$individual.Archaeological_ID,
+      Site = .data$site.Name,
       Country = .data$site.Country,
-      Location = dplyr::if_else(.data$site.Locality == "", "n/a", .data$site.Locality),
+      Location = dplyr::if_else(.data$site.Locality == "", NA_character_, .data$site.Locality),
       Longitude = .data$site.Longitude,
       Latitude = .data$site.Latitude,
       Date_C14_Labnr = dplyr::na_if(.data$individual.C14_Id, ""),
@@ -97,6 +94,7 @@ import_pandora_data <- function(janno, credentials, trust_uncalibrated_dates) {
       .data$Poseidon_ID,
       .data$Collection_ID,
       .data$Country,
+      .data$Site,
       .data$Location,
       .data$Longitude,
       .data$Latitude,

@@ -4,10 +4,10 @@
 \alias{import_pandora_data}
 \title{Collect poseidon janno data from pandora}
 \usage{
-import_pandora_data(janno, credentials, trust_uncalibrated_dates)
+import_pandora_data(sample_ids, credentials, trust_uncalibrated_dates)
 }
 \arguments{
-\item{janno}{A tibble Path to the source .janno file. Passed to \link[poseidonR:janno]{read_janno}}
+\item{sample_ids}{character. A vector of the Poseidon_IDs to pull from pandora.}
 
 \item{credentials}{character. Path to a credentials file containing four lines listing the database host,
 the port of the database server, user and password, respectively.

@@ -7,12 +7,13 @@
 read_eager_stats_table(general_stats_fn, tsv_data)
 }
 \arguments{
-\item{general_stats_fn}{character. Path to the root eager output dir (\code{--outdir}) of the eager run.}
+\item{general_stats_fn}{character. Path to the MultiQC general stats table.
+Can be found in multiqc/multiqc_data/multiqc_general_stats.txt within the specified eager output directory (\code{--outdir}).}
 
 \item{tsv_data}{A tibble containing information from the eager TSV. Created with \link[eager2poseidon:read_eager_tsv]{read_eager_tsv}}
 }
 \value{
-A tibble containing the poseidon janno fields of Damage, Nr_SNPs, Endogenous_DNA, Contamination,
+A tibble containing the poseidon janno fields of Damage, Nr_SNPs, Endogenous, Contamination,
 Contamination_Err, Contamination_Meas, and Contamination_Note
 }
 \description{

@@ -4,19 +4,20 @@
 \alias{import_eager_results}
 \title{Collect poseidon janno data from an eager TSV and its corresponding general stats table.}
 \usage{
-import_eager_results(eager_tsv, general_stats_fn, prefer)
+import_eager_results(eager_tsv_fn, general_stats_fn, prefer)
 }
 \arguments{
-\item{eager_tsv}{character. Path to the TSV file used as input for the eager run.}
+\item{eager_tsv_fn}{character. Path to the TSV file used as input for the eager run.}
 
-\item{general_stats_fn}{character. Path to the root eager output dir (\code{--outdir}) of the eager run.}
+\item{general_stats_fn}{character. Path to the MultiQC general stats table.
+Can be found in multiqc/multiqc_data/multiqc_general_stats.txt within the specified eager output directory (\code{--outdir}).}
 
 \item{prefer}{character. Can be set to "none", "single", or "double".
 If set to 'single; or 'double', will keep only information for libraries with the specified strandedness.
 If 'none', all information is retained.}
 }
 \value{
-A tibble containing the poseidon janno fields of Nr_Libraries, Capture_Type, UDG, Library_Built, Damage, Nr_SNPs, Endogenous_DNA, Contamination,
+A tibble containing the poseidon janno fields of Nr_Libraries, Capture_Type, UDG, Library_Built, Damage, Nr_SNPs, Endogenous, Contamination,
 Contamination_Err, Contamination_Meas, and Contamination_Note
 }
 \description{
