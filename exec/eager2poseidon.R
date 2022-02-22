@@ -45,12 +45,17 @@ parser <- add_option(parser, c("-o", "--output_janno"),
 
 args <- parse_args(parser)
 
+## DEBUG For debugging ease
+# print(args, file=stderr())
+
 ## If no output is provided, output_fn is the input janno path.
 if (args$output_fn == "") {
   output_fn <- args$janno_fn
+} else {
+  output_fn <- args$output_fn
 }
 
-input_janno_table <- standardise_janno(args$input)
+input_janno_table <- standardise_janno(args$janno_fn)
 
 external_results_table <- collate_external_results(
   sample_ids = dplyr::select(input_janno_table, Poseidon_ID),
