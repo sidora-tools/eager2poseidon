@@ -2,6 +2,7 @@
 
 require(optparse)
 library(magrittr)
+require(eager2poseidon)
 
 ## Parse arguments ----------------------------
 parser <- OptionParser()
