@@ -4,8 +4,9 @@
 #' an eager TSV and the MultiQC general stats table of an eager run using that TSV.
 #' Any cells that are already filled in the janno table will be kept as is.
 #'
-#' @param input_janno A standardised janno tibble, as returned by \link[eager2poseidon:standardise_janno]{standardise_janno}.
+#' @param input_janno_table A standardised janno tibble, as returned by \link[eager2poseidon:standardise_janno]{standardise_janno}.
 #' @param external_results_table A tibble with the collected results form pandora and eager, as returned by \link[eager2poseidon:collate_external_results]{collate_external_results}.
+#' @param genotype_ploidy character. The genotype ploidy of the genotypes in the dataset. Can be either 'diploid' or 'haploid'.
 #'
 #' @return A tibble with missing values filled in for the fields
 #' Collection_ID, Country, Site, Location, Longitude,
@@ -13,12 +14,18 @@
 #' Date_C14_Uncal_BP, Date_C14_Uncal_BP_Err, Date_Type, Nr_Libraries, Capture_Type,
 #' UDG, Library_Built, Damage, Nr_SNPs, Endogenous, Contamination, Contamination_Err
 #' @export
-fill_in_janno <- function(input_janno, external_results_table) {
+fill_in_janno <- function(input_janno_table, external_results_table, genotype_ploidy) {
+
+  ## Validate genotype ploidy option input
+  valid_ploidy_entries=c("haploid", "diploid")
+  if (!genotype_ploidy %in% valid_ploidy_entries) {
+    stop(call.=F, "\nInvalid genotype ploidy: '", value, "'\nAccepted values: ", paste(valid_entries,collapse=", "))
+  }
 
   ## Set individual order so it matches the input janno
-  ind_order <- dplyr::pull(input_janno, .data$Poseidon_ID)
+  ind_order <- dplyr::pull(input_janno_table, .data$Poseidon_ID)
 
-  output_janno <- dplyr::full_join(input_janno, external_results_table, by = "Poseidon_ID") %>%
+  output_janno <- dplyr::full_join(input_janno_table, external_results_table, by = "Poseidon_ID") %>%
     dplyr::mutate(
       Collection_ID = dplyr::coalesce(.data$Collection_ID.x, .data$Collection_ID.y),
       Country = dplyr::coalesce(.data$Country.x, .data$Country.y),
@@ -41,7 +48,10 @@ fill_in_janno <- function(input_janno, external_results_table) {
       Nr_SNPs = dplyr::coalesce(.data$Nr_SNPs.x, .data$Nr_SNPs.y),
       Endogenous = dplyr::coalesce(.data$Endogenous.x, .data$Endogenous.y),
       Contamination = dplyr::coalesce(.data$Contamination.x, .data$Contamination.y),
-      Contamination_Err = dplyr::coalesce(.data$Contamination_Err.x, .data$Contamination_Err.y)
+      Contamination_Err = dplyr::coalesce(.data$Contamination_Err.x, .data$Contamination_Err.y),
+      Contamination_Meas = dplyr::coalesce(.data$Contamination_Meas.x, .data$Contamination_Meas.y),
+      Contamination_Note = dplyr::coalesce(.data$Contamination_Note.x, .data$Contamination_Note.y),
+      Genotype_Ploidy = dplyr::coalesce(.data$Genotype_Ploidy, genotype_ploidy)
     ) %>%
     dplyr::select(
       .data$Poseidon_ID,
@@ -67,6 +77,8 @@ fill_in_janno <- function(input_janno, external_results_table) {
       .data$Endogenous,
       .data$Contamination,
       .data$Contamination_Err,
+      .data$Contamination_Meas,
+      .data$Contamination_Note,
       tidyselect::any_of(
         c(
           "Alternative_IDs",
@@ -77,7 +89,6 @@ fill_in_janno <- function(input_janno, external_results_table) {
           "Y_Haplogroup",
           "Source_Tissue",
           "Genotype_Ploidy",
-          "Data_Preparation_Pipeline_URL",
           "Coverage_on_Target_SNPs",
           "Genetic_Source_Accession_IDs",
           "Primary_Contact",
@@ -87,7 +98,8 @@ fill_in_janno <- function(input_janno, external_results_table) {
     ) %>%
     ## Set the order so it matches the input janno
     dplyr::mutate(
-      Poseidon_ID = factor(.data$Poseidon_ID, levels = ind_order)
+      Poseidon_ID = factor(.data$Poseidon_ID, levels = ind_order),
+      Data_Preparation_Pipeline_URL="https://nf-co.re/eager",
     ) %>%
     dplyr::arrange(.data$Poseidon_ID)
 
@@ -150,6 +162,11 @@ standardise_janno <- function(janno_fn) {
       "Contamination" = "Xcontam",
       "Contamination_Err" = "Xcontam_stderr",
       "Coverage_on_Target_SNPs" = "Coverage_1240K"
+    ) %>%
+      ## Add missing columns that we then coalesce onto.
+      dplyr::mutate(
+        Contamination_Meas = NA_character_,
+        Contamination_Note = NA_character_,
     )
   }
 
@@ -164,9 +181,9 @@ standardise_janno <- function(janno_fn) {
 #' @return A tibble with the collected results from Pandora and eager.
 #' @export
 #'
-collate_external_results <- function(sample_ids, eager_tsv_fn, general_stats_fn, credentials, prefer = "none", trust_uncalibrated_dates = F) {
+collate_external_results <- function(sample_ids, eager_tsv_fn, general_stats_fn, credentials, prefer = "none", trust_uncalibrated_dates = F, snp_cutoff) {
   pandora_table <- import_pandora_data(sample_ids, credentials, trust_uncalibrated_dates)
-  eager_table <- import_eager_results(eager_tsv_fn, general_stats_fn, prefer)
+  eager_table <- import_eager_results(eager_tsv_fn, general_stats_fn, prefer, snp_cutoff)
 
   external_results <- dplyr::full_join(pandora_table, eager_table, by = c("Poseidon_ID" = "Sample_Name"))
 
