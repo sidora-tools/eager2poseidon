@@ -4,6 +4,7 @@ require(optparse)
 library(magrittr)
 require(eager2poseidon)
 
+
 ## Parse arguments ----------------------------
 parser <- OptionParser()
 parser <- add_option(parser, c("-j", "--input_janno"),
@@ -34,7 +35,18 @@ parser <- add_option(parser, c("-t", "--trust_uncalibrated_dates"),
 parser <- add_option(parser, c("-p", "--prefer"),
   type = "character",
   action = "store", default = "none", dest = "prefer",
-  help = "Can be set to 'none', 'single', or 'double'. If set to 'single' or 'double', will keep only information for libraries with the specified strandedness. If 'none', all information is retained. [none]"
+  help = "Can be set to 'none', 'single', or 'double'. If set to 'single' or 'double', will keep only information for libraries with the specified strandedness. If 'none', all information is retained. ['none']"
+)
+parser <- add_option(parser, c("-s", "--snp_cutoff"),
+  type = "integer",
+  action = "store", default = "100", dest = "snp_cutoff",
+  help = "The snp cutoff for nuclear contamination results. Nuclear contamination results with fewer than this number of SNPs will be ignored when calculating the values for 'Contamination_*' columns. [100]"
+)
+parser <- add_option(parser, c("-p", "--genotypePloidy"),
+  type = 'character',
+  action = "store", dest = "genotype_ploidy",
+  metavar="ploidy",
+  help = "The genotype ploidy of the genotypes produced by eager. This value will be used to fill in all missing entries in the 'Genotype_Ploidy' in the output janno file."
 )
 parser <- add_option(parser, c("-o", "--output_janno"),
   type = "character",
@@ -63,12 +75,14 @@ external_results_table <- collate_external_results(
   general_stats_fn = args$general_stats_fn,
   credentials = args$credentials,
   prefer = args$prefer,
-  trust_uncalibrated_dates = args$trust_uncalibrated_dates
+  trust_uncalibrated_dates = args$trust_uncalibrated_dates,
+  snp_cutoff = args$snp_cutoff
 )
 
 output_janno <- fill_in_janno(
-  input_janno = input_janno_table,
-  external_results_table = external_results_table
+  input_janno_table = input_janno_table,
+  external_results_table = external_results_table,
+  genotype_ploidy = args$genotype_ploidy
 )
 
 ## Replace NAs with "n/a" (requires re-typing everything to character)
