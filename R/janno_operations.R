@@ -151,7 +151,7 @@ standardise_janno <- function(janno_fn) {
     dplyr::select(tidyselect::any_of(c("Individual_ID", "Poseidon_ID")))
   ## Rename to Individual_ID to Poseidon_ID if the janno is from an older Poseidon version. Throw warning.
   if (names(sample_ids) == "Individual_ID") {
-    warning("Your janno file appears to be from an older poseidon version. It will be updated to poseidon version '2.5.0'.")
+    warning("Your janno file appears to be from an older poseidon version. It will be updated to poseidon version '2.5.0'.\n\t\tEnsure you UPDATE POSEIDON VERSION on your POSEIDON.yaml as well!")
     ## Change column names in imported janno and in sample_ids to poseidon 2.5.0 versions
     input_janno <- input_janno %>% dplyr::rename(
       "Poseidon_ID" = "Individual_ID",
