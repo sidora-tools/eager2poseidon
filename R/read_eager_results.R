@@ -8,6 +8,8 @@ if (getRversion() >= "2.15.1") utils::globalVariables(c(".")) ## Disables notes 
 #' @param prefer character. Can be set to "none", "single", or "double".
 #' If set to 'single; or 'double', will keep only information for libraries with the specified strandedness.
 #' If 'none', all information is retained.
+#' @param snp_cutoff integer. The minimum number of SNPs used for nuclear contamination results, for the results to be
+#' considered trustworthy. Any values from libraries with fewer than this number of SNPs are ignored.
 #'
 #' @return A tibble containing the poseidon janno fields of Nr_Libraries, Capture_Type, UDG, Library_Built, Damage, Nr_SNPs, Endogenous, Contamination,
 #' Contamination_Err, Contamination_Meas, and Contamination_Note
@@ -16,13 +18,13 @@ if (getRversion() >= "2.15.1") utils::globalVariables(c(".")) ## Disables notes 
 #' @importFrom rlang .data
 #' @importFrom magrittr "%>%"
 
-import_eager_results <- function(eager_tsv_fn, general_stats_fn, prefer) {
+import_eager_results <- function(eager_tsv_fn, general_stats_fn, prefer, snp_cutoff) {
   ## Parse TSV
   tsv_data <- read_eager_tsv(eager_tsv_fn, prefer)
   write("Parsing of eager input TSV completed.", file = stderr())
 
   ## Parse general stats table
-  eager_data <- read_eager_stats_table(general_stats_fn, tsv_data)
+  eager_data <- read_eager_stats_table(general_stats_fn, tsv_data, snp_cutoff)
   write("Parsing of eager general stats table completed.", file = stderr())
 
   ## Collate data
@@ -190,7 +192,7 @@ collapse_for_poseidon <- function(x, field) {
 #' @export
 #' @importFrom magrittr "%>%"
 
-read_eager_stats_table <- function(general_stats_fn, tsv_data) {
+read_eager_stats_table <- function(general_stats_fn, tsv_data, snp_cutoff = 50) {
   ## Check the file exists
   if (!file.exists(general_stats_fn)) {
     stop(paste0("File '", general_stats_fn, "' not found."))
@@ -213,15 +215,15 @@ read_eager_stats_table <- function(general_stats_fn, tsv_data) {
       x_contamination_error = .data$`nuclear_contamination_mqc-generalstats-nuclear_contamination-Method1_ML_SE`,
       duplication_rate = .data$`Picard_mqc-generalstats-picard-PERCENT_DUPLICATION`,
       filtered_mapped_reads = .data$`Samtools Flagstat (post-samtools filter)_mqc-generalstats-samtools_flagstat_post_samtools_filter-mapped_passed`
-    ) %>%
-    dplyr::mutate(
-      x_contamination = dplyr::case_when(
-        .data$x_contamination_snps == 0 ~ "n/a",
-        # is.na(x_contamination) ~ "n/a",
-        TRUE ~ format(.data$x_contamination, nsmall = 3, digits = 0, trim = T)
-      ),
-      x_contamination_error = tidyr::replace_na("n/a")
-    )
+    ) #%>%
+    # dplyr::mutate(
+    #   x_contamination = dplyr::case_when(
+    #     .data$x_contamination_snps == 0 ~ "n/a",
+    #     # is.na(x_contamination) ~ "n/a",
+    #     TRUE ~ format(.data$x_contamination, nsmall = 3, digits = 0, trim = T)
+    #   ),
+    #   x_contamination_error = tidyr::replace_na("n/a")
+    # )
 
   ## For endogenous, only look at Shotgun libraries. If none exist return "n/a"s
   if (nrow(tsv_data %>% dplyr::filter(.data$Seq_Type == "Shotgun")) == 0) {
@@ -241,14 +243,32 @@ read_eager_stats_table <- function(general_stats_fn, tsv_data) {
   contamination_per_sample <- general_stats %>%
     tidyr::separate(.data$Sample, sep = "\\.", into = c("Sample", "Library"), fill = "right", extra = "merge") %>%
     dplyr::filter(!is.na(.data$Library)) %>%
+    dplyr::mutate(
+      x_contamination = dplyr::case_when(
+        .data$x_contamination_snps < snp_cutoff ~ NA_real_,
+        TRUE ~ .data$x_contamination
+        # TRUE ~ format(.data$x_contamination, nsmall = 3, digits = 0, trim = T)
+      ),
+      x_contamination_error = dplyr::case_when(
+        .data$x_contamination_snps < snp_cutoff ~ NA_real_,
+        TRUE ~ .data$x_contamination_error
+        # TRUE ~ format(.data$x_contamination_error, nsmall = 3, digits = 0, trim = T)
+      )
+    ) %>%
     ## Keep only Library Entries
     dplyr::group_by(.data$Sample) %>%
     dplyr::summarise(
-      Contamination = paste(.data$x_contamination, collapse = ";"),
-      Contamination_Err = paste(.data$x_contamination_error, collapse = ";"),
-      Contamination_Meas = paste(rep("ANGSD", length(.data$x_contamination)), collapse = ";"),
-      Contamination_Note = paste("Nr Snps:", paste(.data$x_contamination_snps, collapse = ";"))
-    )
+      ## Take weighted mean of contamination and error (technically it doesnt make sense for the error, but that's what we have.)
+      contamination_weighted_mean=stats::weighted.mean(.data$x_contamination, .data$filtered_mapped_reads, na.rm=T),
+      contamination_weigthed_mean_err=stats::weighted.mean(.data$x_contamination_error, .data$filtered_mapped_reads, na.rm=T),
+      Contamination = dplyr::if_else(is.nan(.data$contamination_weighted_mean), NA_character_, .data$contamination_weighted_mean %>%
+        format(., nsmall = 3, digits = 0, trim = T)), ## Change to type 'char' and format to three decimals
+      Contamination_Err = dplyr::if_else(is.nan(.data$contamination_weigthed_mean_err), NA_character_, .data$contamination_weigthed_mean_err %>%
+        format(., nsmall = 3, digits = 0, trim = T)), ## Change to type 'char' and format to three decimals
+      Contamination_Meas = dplyr::if_else(is.na(Contamination), NA_character_, paste("ANGSD")),
+      Contamination_Note = dplyr::if_else(is.na(Contamination), NA_character_, paste0("Nr Snps (per library): ", paste(.data$x_contamination_snps, collapse = ";"), ". Estimate and error are weighted means of values per library. Libraries with fewer than ",snp_cutoff," were excluded."))
+    ) %>%
+    dplyr::select(-.data$contamination_weighted_mean, -.data$contamination_weigthed_mean_err)
 
   ## For the rest use everything
   sample_stats <- general_stats %>%
