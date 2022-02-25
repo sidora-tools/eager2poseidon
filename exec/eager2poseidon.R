@@ -32,9 +32,9 @@ parser <- add_option(parser, c("-t", "--trust_uncalibrated_dates"),
   action = "store_true", default = F, dest = "trust_uncalibrated_dates",
   help = "Should any uncalibrated dates in pandora be trusted? If provided, then quickcalibrate() is used to calibrate these dates on the fly. [False]"
 )
-parser <- add_option(parser, c("-p", "--prefer"),
+parser <- add_option(parser, c("-k", "--keep_only"),
   type = "character",
-  action = "store", default = "none", dest = "prefer",
+  action = "store", default = "none", dest = "keep_only",
   help = "Can be set to 'none', 'single', or 'double'. If set to 'single' or 'double', will keep only information for libraries with the specified strandedness. If 'none', all information is retained. ['none']"
 )
 parser <- add_option(parser, c("-s", "--snp_cutoff"),
@@ -74,7 +74,7 @@ external_results_table <- collate_external_results(
   eager_tsv_fn = args$eager_tsv_fn,
   general_stats_fn = args$general_stats_fn,
   credentials = args$credentials,
-  prefer = args$prefer,
+  keep_only = args$keep_only,
   trust_uncalibrated_dates = args$trust_uncalibrated_dates,
   snp_cutoff = args$snp_cutoff
 )

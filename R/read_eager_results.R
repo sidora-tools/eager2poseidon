@@ -5,7 +5,7 @@ if (getRversion() >= "2.15.1") utils::globalVariables(c(".")) ## Disables notes 
 #' @param eager_tsv_fn character. Path to the TSV file used as input for the eager run.
 #' @param general_stats_fn character. Path to the MultiQC general stats table.
 #' Can be found in multiqc/multiqc_data/multiqc_general_stats.txt within the specified eager output directory (`--outdir`).
-#' @param prefer character. Can be set to "none", "single", or "double".
+#' @param keep_only character. Can be set to "none", "single", or "double".
 #' If set to 'single; or 'double', will keep only information for libraries with the specified strandedness.
 #' If 'none', all information is retained.
 #' @param snp_cutoff integer. The minimum number of SNPs used for nuclear contamination results, for the results to be
@@ -18,9 +18,9 @@ if (getRversion() >= "2.15.1") utils::globalVariables(c(".")) ## Disables notes 
 #' @importFrom rlang .data
 #' @importFrom magrittr "%>%"
 
-import_eager_results <- function(eager_tsv_fn, general_stats_fn, prefer, snp_cutoff) {
+import_eager_results <- function(eager_tsv_fn, general_stats_fn, keep_only, snp_cutoff) {
   ## Parse TSV
-  tsv_data <- read_eager_tsv(eager_tsv_fn, prefer)
+  tsv_data <- read_eager_tsv(eager_tsv_fn, keep_only)
   write("Parsing of eager input TSV completed.", file = stderr())
 
   ## Parse general stats table
@@ -55,19 +55,19 @@ import_eager_results <- function(eager_tsv_fn, general_stats_fn, prefer, snp_cut
 #' @export
 #' @importFrom magrittr "%>%"
 
-read_eager_tsv <- function(eager_tsv_fn, prefer = "none") {
+read_eager_tsv <- function(eager_tsv_fn, keep_only = "none") {
   ## End execution if TSV file is not found
   if (!file.exists(eager_tsv_fn)) {
     stop(paste0("File '", eager_tsv_fn, "' not found."))
   }
-  if (!prefer %in% c("none", "single", "double")) {
+  if (!keep_only %in% c("none", "single", "double")) {
     stop(paste0("Invalid library strandedness preference: '", eager_tsv_fn, "'"))
   }
   tsv_data <- readr::read_tsv(eager_tsv_fn, col_types = "cciiccccccc") %>%
     dplyr::select(.data$Sample_Name, .data$Library_ID, .data$Strandedness, .data$UDG_Treatment, .data$R1, .data$R2, .data$BAM)
   ## Filter for preferred library strandedness
-  if (prefer != "none") {
-    tsv_data <- dplyr::filter(tsv_data, .data$Strandedness == prefer)
+  if (keep_only != "none") {
+    tsv_data <- dplyr::filter(tsv_data, .data$Strandedness == keep_only)
   }
   ## Separate the Library ID to pandora Library ID and Sequencing ID if the latter was used
   tsv_data <- tsv_data %>%

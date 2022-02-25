@@ -181,9 +181,9 @@ standardise_janno <- function(janno_fn) {
 #' @return A tibble with the collected results from Pandora and eager.
 #' @export
 #'
-collate_external_results <- function(sample_ids, eager_tsv_fn, general_stats_fn, credentials, prefer = "none", trust_uncalibrated_dates = F, snp_cutoff) {
+collate_external_results <- function(sample_ids, eager_tsv_fn, general_stats_fn, credentials, keep_only = "none", trust_uncalibrated_dates = F, snp_cutoff) {
   pandora_table <- import_pandora_data(sample_ids, credentials, trust_uncalibrated_dates)
-  eager_table <- import_eager_results(eager_tsv_fn, general_stats_fn, prefer, snp_cutoff)
+  eager_table <- import_eager_results(eager_tsv_fn, general_stats_fn, keep_only, snp_cutoff)
 
   external_results <- dplyr::full_join(pandora_table, eager_table, by = c("Poseidon_ID" = "Sample_Name"))
 
