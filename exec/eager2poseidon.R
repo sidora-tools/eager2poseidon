@@ -2,7 +2,10 @@
 
 require(optparse)
 library(magrittr)
-require(eager2poseidon)
+if (!require('eager2poseidon')) {
+  if(!require('remotes')) install.packages('remotes')
+  remotes::install_github('sidora-tools/eager2poseidon', quiet=T)
+} else {library(eager2poseidon)}
 
 
 ## Parse arguments ----------------------------
