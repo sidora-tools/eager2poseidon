@@ -111,7 +111,7 @@ format_for_poseidon <- function(x, field) {
   if (field == "Capture_Type") {
     result <- dplyr::case_when(
       x == "SG" ~ "Shotgun",
-      x == "TF" ~ "1240k",
+      x == "TF" ~ "1240K",
       TRUE ~ "Other"
     )
   }
