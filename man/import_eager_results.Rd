@@ -4,7 +4,7 @@
 \alias{import_eager_results}
 \title{Collect poseidon janno data from an eager TSV and its corresponding general stats table.}
 \usage{
-import_eager_results(eager_tsv_fn, general_stats_fn, prefer)
+import_eager_results(eager_tsv_fn, general_stats_fn, keep_only, snp_cutoff)
 }
 \arguments{
 \item{eager_tsv_fn}{character. Path to the TSV file used as input for the eager run.}
@@ -12,9 +12,12 @@ import_eager_results(eager_tsv_fn, general_stats_fn, prefer)
 \item{general_stats_fn}{character. Path to the MultiQC general stats table.
 Can be found in multiqc/multiqc_data/multiqc_general_stats.txt within the specified eager output directory (\code{--outdir}).}
 
-\item{prefer}{character. Can be set to "none", "single", or "double".
+\item{keep_only}{character. Can be set to "none", "single", or "double".
 If set to 'single; or 'double', will keep only information for libraries with the specified strandedness.
 If 'none', all information is retained.}
+
+\item{snp_cutoff}{integer. The minimum number of SNPs used for nuclear contamination results, for the results to be
+considered trustworthy. Any values from libraries with fewer than this number of SNPs are ignored.}
 }
 \value{
 A tibble containing the poseidon janno fields of Nr_Libraries, Capture_Type, UDG, Library_Built, Damage, Nr_SNPs, Endogenous, Contamination,

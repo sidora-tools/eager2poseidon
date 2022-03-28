@@ -9,8 +9,9 @@ collate_external_results(
   eager_tsv_fn,
   general_stats_fn,
   credentials,
-  prefer = "none",
-  trust_uncalibrated_dates = F
+  keep_only = "none",
+  trust_uncalibrated_dates = F,
+  snp_cutoff
 )
 }
 \arguments{
@@ -25,12 +26,15 @@ Can be found in multiqc/multiqc_data/multiqc_general_stats.txt within the specif
 the port of the database server, user and password, respectively.
 Passed to \link[sidora.core:get_pandora_connection]{get_pandora_connection}}
 
-\item{prefer}{character. Can be set to "none", "single", or "double".
+\item{keep_only}{character. Can be set to "none", "single", or "double".
 If set to 'single; or 'double', will keep only information for libraries with the specified strandedness.
 If 'none', all information is retained.}
 
 \item{trust_uncalibrated_dates}{logical. Should any uncalibrated dates in pandora be trusted?
 If set to TRUE, then \link[poseidonR:quickcalibrate]{quickcalibrate()} is used to calibrate these dates on the fly.}
+
+\item{snp_cutoff}{integer. The minimum number of SNPs used for nuclear contamination results, for the results to be
+considered trustworthy. Any values from libraries with fewer than this number of SNPs are ignored.}
 }
 \value{
 A tibble with the collected results from Pandora and eager.

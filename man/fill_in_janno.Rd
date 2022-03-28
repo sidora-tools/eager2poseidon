@@ -4,12 +4,14 @@
 \alias{fill_in_janno}
 \title{Fill in a janno table}
 \usage{
-fill_in_janno(input_janno, external_results_table)
+fill_in_janno(input_janno_table, external_results_table, genotype_ploidy)
 }
 \arguments{
-\item{input_janno}{A standardised janno tibble, as returned by \link[eager2poseidon:standardise_janno]{standardise_janno}.}
+\item{input_janno_table}{A standardised janno tibble, as returned by \link[eager2poseidon:standardise_janno]{standardise_janno}.}
 
 \item{external_results_table}{A tibble with the collected results form pandora and eager, as returned by \link[eager2poseidon:collate_external_results]{collate_external_results}.}
+
+\item{genotype_ploidy}{character. The genotype ploidy of the genotypes in the dataset. Can be either 'diploid' or 'haploid'.}
 }
 \value{
 A tibble with missing values filled in for the fields

@@ -22,6 +22,6 @@ anno value to summarise that dataset in the provided field.
 collapse_for_poseidon("ds;ds;ds", "Library_Built") ## Unique repeated library build
 collapse_for_poseidon("ds;ss;ds", "Library_Built") ## Non-unique library builds
 
-collapse_for_poseidon("minus;minus;minus", "UDG")  ## Unique repeated UDG treatment
-collapse_for_poseidon("minus;half;plus", "UDG")   ## Non-unique UDG treatment
+collapse_for_poseidon("minus;minus;minus", "UDG") ## Unique repeated UDG treatment
+collapse_for_poseidon("minus;half;plus", "UDG") ## Non-unique UDG treatment
 }

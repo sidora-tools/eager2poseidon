@@ -4,13 +4,16 @@
 \alias{read_eager_stats_table}
 \title{Extract poseidon information from the general stats table of a run}
 \usage{
-read_eager_stats_table(general_stats_fn, tsv_data)
+read_eager_stats_table(general_stats_fn, tsv_data, snp_cutoff = 50)
 }
 \arguments{
 \item{general_stats_fn}{character. Path to the MultiQC general stats table.
 Can be found in multiqc/multiqc_data/multiqc_general_stats.txt within the specified eager output directory (\code{--outdir}).}
 
 \item{tsv_data}{A tibble containing information from the eager TSV. Created with \link[eager2poseidon:read_eager_tsv]{read_eager_tsv}}
+
+\item{snp_cutoff}{integer. The minimum number of SNPs used for nuclear contamination results, for the results to be
+considered trustworthy. Any values from libraries with fewer than this number of SNPs are ignored.}
 }
 \value{
 A tibble containing the poseidon janno fields of Damage, Nr_SNPs, Endogenous, Contamination,
