@@ -61,7 +61,7 @@ read_eager_tsv <- function(eager_tsv_fn, keep_only = "none") {
     stop(paste0("File '", eager_tsv_fn, "' not found."))
   }
   if (!keep_only %in% c("none", "single", "double")) {
-    stop(paste0("Invalid library strandedness preference: '", eager_tsv_fn, "'"))
+    stop(paste0("Invalid library strandedness preference: '", keep_only, "'"))
   }
   tsv_data <- readr::read_tsv(eager_tsv_fn, col_types = "cciiccccccc") %>%
     dplyr::select(.data$Sample_Name, .data$Library_ID, .data$Strandedness, .data$UDG_Treatment, .data$R1, .data$R2, .data$BAM)
@@ -265,8 +265,8 @@ read_eager_stats_table <- function(general_stats_fn, tsv_data, snp_cutoff = 50) 
         format(., nsmall = 3, digits = 0, trim = T)), ## Change to type 'char' and format to three decimals
       Contamination_Err = dplyr::if_else(is.nan(.data$contamination_weigthed_mean_err), NA_character_, .data$contamination_weigthed_mean_err %>%
         format(., nsmall = 3, digits = 0, trim = T)), ## Change to type 'char' and format to three decimals
-      Contamination_Meas = dplyr::if_else(is.na(Contamination), NA_character_, paste("ANGSD")),
-      Contamination_Note = dplyr::if_else(is.na(Contamination), NA_character_, paste0("Nr Snps (per library): ", paste(.data$x_contamination_snps, collapse = ";"), ". Estimate and error are weighted means of values per library. Libraries with fewer than ",snp_cutoff," were excluded."))
+      Contamination_Meas = dplyr::if_else(is.na(.data$Contamination), NA_character_, paste("ANGSD")),
+      Contamination_Note = dplyr::if_else(is.na(.data$Contamination), NA_character_, paste0("Nr Snps (per library): ", paste(.data$x_contamination_snps, collapse = ";"), ". Estimate and error are weighted means of values per library. Libraries with fewer than ",snp_cutoff," were excluded."))
     ) %>%
     dplyr::select(-.data$contamination_weighted_mean, -.data$contamination_weigthed_mean_err)
 

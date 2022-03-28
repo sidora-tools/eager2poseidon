@@ -19,7 +19,7 @@ fill_in_janno <- function(input_janno_table, external_results_table, genotype_pl
   ## Validate genotype ploidy option input
   valid_ploidy_entries=c("haploid", "diploid")
   if (!genotype_ploidy %in% valid_ploidy_entries) {
-    stop(call.=F, "\nInvalid genotype ploidy: '", value, "'\nAccepted values: ", paste(valid_entries,collapse=", "))
+    stop(call.=F, "\nInvalid genotype ploidy: '", genotype_ploidy, "'\nAccepted values: ", paste(valid_ploidy_entries,collapse=", "))
   }
 
   ## Set individual order so it matches the input janno
