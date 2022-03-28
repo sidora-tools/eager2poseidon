@@ -62,7 +62,13 @@ import_pandora_data <- function(sample_ids, credentials, trust_uncalibrated_date
       Date_C14_Uncal_BP_Err = NA_integer_,
       Date_Type_quickcal = NA_character_,
       Date_Note_quickcal = NA_character_
-    )
+    ) %>%
+    ## Replace double quotes with single quotes in text entries from Pandora, to avoid janno validation errors.
+    dplyr::mutate(dplyr::across(
+      .cols=c(.data$Collection_ID, .data$Site, .data$Country, .data$Location),
+      .fns=~stringr::str_replace_all(.,'"', "'")
+      ))
+
   ## If user trusts uncalibrated dates (and C14 IDs are set up correctly) for their samples,
   ##    then use that data to quickcalibrate (calibrated dates are retained if existing)
   if (trust_uncalibrated_dates) {
