@@ -215,15 +215,15 @@ read_eager_stats_table <- function(general_stats_fn, tsv_data, snp_cutoff = 50) 
       x_contamination_error = .data$`nuclear_contamination_mqc-generalstats-nuclear_contamination-Method1_ML_SE`,
       duplication_rate = .data$`Picard_mqc-generalstats-picard-PERCENT_DUPLICATION`,
       filtered_mapped_reads = .data$`Samtools Flagstat (post-samtools filter)_mqc-generalstats-samtools_flagstat_post_samtools_filter-mapped_passed`
-    ) #%>%
-    # dplyr::mutate(
-    #   x_contamination = dplyr::case_when(
-    #     .data$x_contamination_snps == 0 ~ "n/a",
-    #     # is.na(x_contamination) ~ "n/a",
-    #     TRUE ~ format(.data$x_contamination, nsmall = 3, digits = 0, trim = T)
-    #   ),
-    #   x_contamination_error = tidyr::replace_na("n/a")
-    # )
+    ) # %>%
+  # dplyr::mutate(
+  #   x_contamination = dplyr::case_when(
+  #     .data$x_contamination_snps == 0 ~ "n/a",
+  #     # is.na(x_contamination) ~ "n/a",
+  #     TRUE ~ format(.data$x_contamination, nsmall = 3, digits = 0, trim = T)
+  #   ),
+  #   x_contamination_error = tidyr::replace_na("n/a")
+  # )
 
   ## For endogenous, only look at Shotgun libraries. If none exist return "n/a"s
   if (nrow(tsv_data %>% dplyr::filter(.data$Seq_Type == "Shotgun")) == 0) {
@@ -259,14 +259,14 @@ read_eager_stats_table <- function(general_stats_fn, tsv_data, snp_cutoff = 50) 
     dplyr::group_by(.data$Sample) %>%
     dplyr::summarise(
       ## Take weighted mean of contamination and error (technically it doesnt make sense for the error, but that's what we have.)
-      contamination_weighted_mean=stats::weighted.mean(.data$x_contamination, .data$filtered_mapped_reads, na.rm=T),
-      contamination_weigthed_mean_err=stats::weighted.mean(.data$x_contamination_error, .data$filtered_mapped_reads, na.rm=T),
+      contamination_weighted_mean = stats::weighted.mean(.data$x_contamination, .data$filtered_mapped_reads, na.rm = T),
+      contamination_weigthed_mean_err = stats::weighted.mean(.data$x_contamination_error, .data$filtered_mapped_reads, na.rm = T),
       Contamination = dplyr::if_else(is.nan(.data$contamination_weighted_mean), NA_character_, .data$contamination_weighted_mean %>%
         format(., nsmall = 3, digits = 0, trim = T)), ## Change to type 'char' and format to three decimals
       Contamination_Err = dplyr::if_else(is.nan(.data$contamination_weigthed_mean_err), NA_character_, .data$contamination_weigthed_mean_err %>%
         format(., nsmall = 3, digits = 0, trim = T)), ## Change to type 'char' and format to three decimals
       Contamination_Meas = dplyr::if_else(is.na(.data$Contamination), NA_character_, paste("ANGSD")),
-      Contamination_Note = dplyr::if_else(is.na(.data$Contamination), NA_character_, paste0("Nr Snps (per library): ", paste(.data$x_contamination_snps, collapse = ";"), ". Estimate and error are weighted means of values per library. Libraries with fewer than ",snp_cutoff," were excluded."))
+      Contamination_Note = dplyr::if_else(is.na(.data$Contamination), NA_character_, paste0("Nr Snps (per library): ", paste(.data$x_contamination_snps, collapse = ";"), ". Estimate and error are weighted means of values per library. Libraries with fewer than ", snp_cutoff, " were excluded."))
     ) %>%
     dplyr::select(-.data$contamination_weighted_mean, -.data$contamination_weigthed_mean_err)
 

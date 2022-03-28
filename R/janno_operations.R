@@ -17,9 +17,9 @@
 fill_in_janno <- function(input_janno_table, external_results_table, genotype_ploidy) {
 
   ## Validate genotype ploidy option input
-  valid_ploidy_entries=c("haploid", "diploid")
+  valid_ploidy_entries <- c("haploid", "diploid")
   if (!genotype_ploidy %in% valid_ploidy_entries) {
-    stop(call.=F, "\nInvalid genotype ploidy: '", genotype_ploidy, "'\nAccepted values: ", paste(valid_ploidy_entries,collapse=", "))
+    stop(call. = F, "\nInvalid genotype ploidy: '", genotype_ploidy, "'\nAccepted values: ", paste(valid_ploidy_entries, collapse = ", "))
   }
 
   ## Set individual order so it matches the input janno
@@ -99,7 +99,7 @@ fill_in_janno <- function(input_janno_table, external_results_table, genotype_pl
     ## Set the order so it matches the input janno
     dplyr::mutate(
       Poseidon_ID = factor(.data$Poseidon_ID, levels = ind_order),
-      Data_Preparation_Pipeline_URL="https://nf-co.re/eager",
+      Data_Preparation_Pipeline_URL = "https://nf-co.re/eager",
     ) %>%
     dplyr::arrange(.data$Poseidon_ID)
 
@@ -167,7 +167,7 @@ standardise_janno <- function(janno_fn) {
       dplyr::mutate(
         Contamination_Meas = NA_character_,
         Contamination_Note = NA_character_,
-    )
+      )
   }
 
   return(input_janno)
