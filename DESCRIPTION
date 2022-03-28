@@ -18,6 +18,7 @@ Imports:
     rlang,
     sidora.core,
     stats,
+    stringr,
     tibble,
     tidyr,
     tidyselect
