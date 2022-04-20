@@ -273,6 +273,7 @@ read_eager_stats_table <- function(general_stats_fn, tsv_data, snp_cutoff = 50) 
   ## For the rest use everything
   sample_stats <- general_stats %>%
     tidyr::separate(.data$Sample, sep = "\\.", into = c("Sample", "Library"), fill = "right", extra = "merge") %>%
+    dplyr::mutate(filtered_mapped_reads=dplyr::na_if(.data$filtered_mapped_reads,0)) %>%
     dplyr::group_by(.data$Sample) %>%
     dplyr::summarise(
       Damage = stats::weighted.mean(stats::na.omit(.data$damage_5p1), stats::na.omit(.data$filtered_mapped_reads)),
