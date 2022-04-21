@@ -215,15 +215,11 @@ read_eager_stats_table <- function(general_stats_fn, tsv_data, snp_cutoff = 50) 
       x_contamination_error = .data$`nuclear_contamination_mqc-generalstats-nuclear_contamination-Method1_ML_SE`,
       duplication_rate = .data$`Picard_mqc-generalstats-picard-PERCENT_DUPLICATION`,
       filtered_mapped_reads = .data$`Samtools Flagstat (post-samtools filter)_mqc-generalstats-samtools_flagstat_post_samtools_filter-mapped_passed`
-    ) # %>%
-  # dplyr::mutate(
-  #   x_contamination = dplyr::case_when(
-  #     .data$x_contamination_snps == 0 ~ "n/a",
-  #     # is.na(x_contamination) ~ "n/a",
-  #     TRUE ~ format(.data$x_contamination, nsmall = 3, digits = 0, trim = T)
-  #   ),
-  #   x_contamination_error = tidyr::replace_na("n/a")
-  # )
+    ) %>%
+    ## Type all columns but Sample as doubles. Avoids type "lgl" when all entries in a column are NA.
+    dplyr::mutate(
+      dplyr::across(!.data$Sample, as.double)
+    )
 
   ## For endogenous, only look at Shotgun libraries. If none exist return "n/a"s
   if (nrow(tsv_data %>% dplyr::filter(.data$Seq_Type == "Shotgun")) == 0) {
