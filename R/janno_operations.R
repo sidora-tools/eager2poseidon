@@ -24,12 +24,18 @@ fill_in_janno <- function(input_janno_table, external_results_table, genotype_pl
 
   ## Set individual order so it matches the input janno
   ind_order <- dplyr::pull(input_janno_table, .data$Poseidon_ID)
+  ## If no note field is present add one full of NAs
+  if ( ! "Note" %in% names(input_janno_table)) {
+    janno_table <- input_janno_table %>% dplyr::mutate(Note=NA_character_)
+  } else {
+    janno_table <- input_janno_table
+  }
 
   ## Separate genetic sex from the rest of the external data, since it needs special handling.
   sexdet_table <- external_results_table %>% dplyr::select(.data$Poseidon_ID, .data$Genetic_Sex)
   external_results_table <- external_results_table %>% dplyr::select(-.data$Genetic_Sex)
 
-  output_janno <- dplyr::full_join(input_janno_table, external_results_table, by = "Poseidon_ID") %>%
+  output_janno <- dplyr::full_join(janno_table, external_results_table, by = "Poseidon_ID") %>%
     dplyr::mutate(
       Collection_ID = dplyr::coalesce(.data$Collection_ID.x, .data$Collection_ID.y),
       Country = dplyr::coalesce(.data$Country.x, .data$Country.y),
@@ -56,7 +62,7 @@ fill_in_janno <- function(input_janno_table, external_results_table, genotype_pl
       Contamination_Meas = dplyr::coalesce(.data$Contamination_Meas.x, .data$Contamination_Meas.y),
       Contamination_Note = dplyr::coalesce(.data$Contamination_Note.x, .data$Contamination_Note.y),
       Genotype_Ploidy = dplyr::coalesce(.data$Genotype_Ploidy, genotype_ploidy),
-      Note = ifelse( "Note" %in% names(input_janno_table), dplyr::coalesce(.data$Note.x, .data$Note.y), .data$Note)
+      Note = dplyr::coalesce(.data$Note.x, .data$Note.y)
     ) %>%
     dplyr::select(
       .data$Poseidon_ID,
