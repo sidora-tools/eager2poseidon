@@ -206,6 +206,10 @@ read_eager_stats_table <- function(general_stats_fn, tsv_data, snp_cutoff = 50) 
     dplyr::filter(.data$Sample %in% pull_samples) %>%
     dplyr::select(
       .data$Sample,
+      sexdet_err_x = .data$`SexDetErrmine_mqc-generalstats-sexdeterrmine-RateErrX`,
+      sexdet_err_y = .data$`SexDetErrmine_mqc-generalstats-sexdeterrmine-RateErrY`,
+      sexdet_rate_x = .data$`SexDetErrmine_mqc-generalstats-sexdeterrmine-RateX`,
+      sexdet_rate_y = .data$`SexDetErrmine_mqc-generalstats-sexdeterrmine-RateY`,
       endogenous_dna = .data$`endorSpy_mqc-generalstats-endorspy-endogenous_dna`,
       covered_snps = .data$`snp_coverage_mqc-generalstats-snp_coverage-Covered_Snps`,
       total_snps = .data$`snp_coverage_mqc-generalstats-snp_coverage-Total_Snps`,
@@ -272,9 +276,32 @@ read_eager_stats_table <- function(general_stats_fn, tsv_data, snp_cutoff = 50) 
     dplyr::mutate(filtered_mapped_reads = dplyr::na_if(.data$filtered_mapped_reads, 0)) %>%
     dplyr::group_by(.data$Sample) %>%
     dplyr::summarise(
+      x_rate = stats::na.omit(.data$sexdet_rate_x),
+      y_rate = stats::na.omit(.data$sexdet_rate_y),
+      x_err = stats::na.omit(.data$sexdet_err_x),
+      y_err = stats::na.omit(.data$sexdet_err_y),
       Damage = stats::weighted.mean(stats::na.omit(.data$damage_5p1), stats::na.omit(.data$filtered_mapped_reads)),
       Nr_SNPs = max(.data$covered_snps, na.rm = T)
-    )
+    ) %>%
+    dplyr::mutate(
+      Genetic_Sex = infer_genetic_sex(.data$x_rate, .data$y_rate),
+      Note = paste0("x-rate: ",
+                    format(.data$x_rate, nsmall = 3, digits = 0, trim = T),
+                    " +- ",
+                    format(.data$x_err, nsmall = 3, digits = 0, trim = T),
+                    ", y-rate: ",
+                    format(.data$y_rate, nsmall = 3, digits = 0, trim = T),
+                    " +- ",
+                    format(.data$y_err, nsmall = 3, digits = 0, trim = T),
+                    ";")
+    ) %>%
+    dplyr::select(
+      .data$Sample,
+      .data$Genetic_Sex,
+      .data$Damage,
+      .data$Nr_SNPs,
+      .data$Note
+      )
 
   ## Join it all together
   result <- dplyr::full_join(sample_stats, endogenous_per_sample, by = "Sample") %>%

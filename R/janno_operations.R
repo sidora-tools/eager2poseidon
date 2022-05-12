@@ -25,6 +25,10 @@ fill_in_janno <- function(input_janno_table, external_results_table, genotype_pl
   ## Set individual order so it matches the input janno
   ind_order <- dplyr::pull(input_janno_table, .data$Poseidon_ID)
 
+  ## Separate genetic sex from the rest of the external data, since it needs special handling.
+  sexdet_table <- external_results_table %>% dplyr::select(.data$Poseidon_ID, .data$Genetic_Sex)
+  external_results_table <- external_results_table %>% dplyr::select(-.data$Genetic_Sex)
+
   output_janno <- dplyr::full_join(input_janno_table, external_results_table, by = "Poseidon_ID") %>%
     dplyr::mutate(
       Collection_ID = dplyr::coalesce(.data$Collection_ID.x, .data$Collection_ID.y),
@@ -96,6 +100,7 @@ fill_in_janno <- function(input_janno_table, external_results_table, genotype_pl
         )
       )
     ) %>%
+    fill_genetic_sex(., sexdet_table) %>%
     ## Set the order so it matches the input janno
     dplyr::mutate(
       Poseidon_ID = factor(.data$Poseidon_ID, levels = ind_order),
@@ -188,4 +193,34 @@ collate_external_results <- function(sample_ids, eager_tsv_fn, general_stats_fn,
   external_results <- dplyr::full_join(pandora_table, eager_table, by = c("Poseidon_ID" = "Sample_Name"))
 
   return(external_results)
+}
+
+#' Add genetic sex information to the input janno, throwing a warning if any changes happen, so users know to update their .fam/.ind files
+#'
+#' @param input_janno_table tibble. A standardised janno tibble, as returned by \link[eager2poseidon:standardise_janno]{standardise_janno}.
+#' @param genetic_sex_table tibble. A tibble containing the Poseidon_Id and Sex of inferred genetic sex of each sample
+#'
+#' @return tibble. A tibble with filled in Genetic_Sex information.
+#' A warning is printed if any entries have been updated, requesting manual changes to be made to the .fam/.ind files of the poseidon package.
+#'
+fill_genetic_sex <- function(input_janno_table, genetic_sex_table) {
+
+  input <- input_janno_table %>%
+    dplyr::mutate(
+      old_gsex = .data$Genetic_Sex,
+      Genetic_Sex = dplyr::na_if(.data$Genetic_Sex, "U")
+      )
+
+  output_janno <- dplyr::full_join(input, genetic_sex_table, by = "Poseidon_ID") %>%
+    dplyr::mutate(
+      Genetic_Sex = dplyr::coalesce(.data$Genetic_Sex.x, .data$Genetic_Sex.y)
+    ) %>%
+    dplyr::select(-.data$Genetic_Sex.x, -.data$Genetic_Sex.y)
+
+  if ( ! identical(input$old_gsex, output_janno$Genetic_Sex)) {
+    warning("The Genetic_Sex field has been updated for a number of individuals, based on sexdeterrmine results found in the eager output tables.
+            Please update the .fam/.ind file of the package to reflect this change!")
+
+  }
+  return(output_janno)
 }
