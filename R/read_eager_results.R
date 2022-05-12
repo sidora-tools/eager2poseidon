@@ -281,10 +281,10 @@ read_eager_stats_table <- function(general_stats_fn, tsv_data, snp_cutoff = 50) 
       x_err = stats::na.omit(.data$sexdet_err_x),
       y_err = stats::na.omit(.data$sexdet_err_y),
       Damage = stats::weighted.mean(stats::na.omit(.data$damage_5p1), stats::na.omit(.data$filtered_mapped_reads)),
-      Nr_SNPs = max(.data$covered_snps, na.rm = T)
+      Nr_SNPs = max(.data$covered_snps, na.rm = T),
+      Genetic_Sex = infer_genetic_sex(.data$x_rate, .data$y_rate)
     ) %>%
     dplyr::mutate(
-      Genetic_Sex = infer_genetic_sex(.data$x_rate, .data$y_rate),
       Note = paste0("x-rate: ",
                     format(.data$x_rate, nsmall = 3, digits = 0, trim = T),
                     " +- ",
