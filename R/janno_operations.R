@@ -228,7 +228,7 @@ fill_genetic_sex <- function(input_janno_table, genetic_sex_table) {
   if ( ! identical(input$old_gsex, output_janno$Genetic_Sex)) {
     warning("
   The Genetic_Sex field has been updated for a number of individuals, based on sexdeterrmine results found in the eager output tables.
-            Please update the .fam/.ind file of the package to reflect this change!", call=F)
+            Please update the .fam/.ind file of the package to reflect this change!", call. = F)
 
   }
   return(output_janno)
