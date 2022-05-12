@@ -55,7 +55,8 @@ fill_in_janno <- function(input_janno_table, external_results_table, genotype_pl
       Contamination_Err = dplyr::coalesce(.data$Contamination_Err.x, .data$Contamination_Err.y),
       Contamination_Meas = dplyr::coalesce(.data$Contamination_Meas.x, .data$Contamination_Meas.y),
       Contamination_Note = dplyr::coalesce(.data$Contamination_Note.x, .data$Contamination_Note.y),
-      Genotype_Ploidy = dplyr::coalesce(.data$Genotype_Ploidy, genotype_ploidy)
+      Genotype_Ploidy = dplyr::coalesce(.data$Genotype_Ploidy, genotype_ploidy),
+      Note = ifelse( "Note" %in% names(input_janno_table), dplyr::coalesce(.data$Note.x, .data$Note.y), .data$Note)
     ) %>%
     dplyr::select(
       .data$Poseidon_ID,
@@ -96,7 +97,8 @@ fill_in_janno <- function(input_janno_table, external_results_table, genotype_pl
           "Coverage_on_Target_SNPs",
           "Genetic_Source_Accession_IDs",
           "Primary_Contact",
-          "Publication"
+          "Publication",
+          "Note"
         )
       )
     ) %>%
@@ -215,7 +217,7 @@ fill_genetic_sex <- function(input_janno_table, genetic_sex_table) {
     dplyr::mutate(
       Genetic_Sex = dplyr::coalesce(.data$Genetic_Sex.x, .data$Genetic_Sex.y)
     ) %>%
-    dplyr::select(-.data$Genetic_Sex.x, -.data$Genetic_Sex.y)
+    dplyr::select(-.data$Genetic_Sex.x, -.data$Genetic_Sex.y, -.data$old_gsex)
 
   if ( ! identical(input$old_gsex, output_janno$Genetic_Sex)) {
     warning("The Genetic_Sex field has been updated for a number of individuals, based on sexdeterrmine results found in the eager output tables.
