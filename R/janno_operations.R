@@ -32,8 +32,16 @@ fill_in_janno <- function(input_janno_table, external_results_table, genotype_pl
   }
 
   ## Separate genetic sex from the rest of the external data, since it needs special handling.
-  sexdet_table <- external_results_table %>% dplyr::select(.data$Poseidon_ID, .data$Genetic_Sex)
-  external_results_table <- external_results_table %>% dplyr::select(-.data$Genetic_Sex)
+  sexdet_table <- external_results_table %>% dplyr::select(
+    .data$Poseidon_ID,
+    .data$Genetic_Sex,
+    .data$Sex_Determination_Note
+    )
+
+  external_results_table <- external_results_table %>% dplyr::select(
+    -.data$Genetic_Sex,
+    -.data$Sex_Determination_Note
+    )
 
   output_janno <- dplyr::full_join(janno_table, external_results_table, by = "Poseidon_ID") %>%
     dplyr::mutate(
@@ -61,8 +69,7 @@ fill_in_janno <- function(input_janno_table, external_results_table, genotype_pl
       Contamination_Err = dplyr::coalesce(.data$Contamination_Err.x, .data$Contamination_Err.y),
       Contamination_Meas = dplyr::coalesce(.data$Contamination_Meas.x, .data$Contamination_Meas.y),
       Contamination_Note = dplyr::coalesce(.data$Contamination_Note.x, .data$Contamination_Note.y),
-      Genotype_Ploidy = dplyr::coalesce(.data$Genotype_Ploidy, genotype_ploidy),
-      Note = dplyr::coalesce(.data$Note.x, .data$Note.y)
+      Genotype_Ploidy = dplyr::coalesce(.data$Genotype_Ploidy, genotype_ploidy)
     ) %>%
     dplyr::select(
       .data$Poseidon_ID,
@@ -206,7 +213,7 @@ collate_external_results <- function(sample_ids, eager_tsv_fn, general_stats_fn,
 #' Add genetic sex information to the input janno, throwing a warning if any changes happen, so users know to update their .fam/.ind files
 #'
 #' @param input_janno_table tibble. A standardised janno tibble, as returned by \link[eager2poseidon:standardise_janno]{standardise_janno}.
-#' @param genetic_sex_table tibble. A tibble containing the Poseidon_Id and Sex of inferred genetic sex of each sample
+#' @param genetic_sex_table tibble. A tibble containing the Poseidon_Id and Sex of inferred genetic sex of each sample, as well as a Sex_Determination_Note
 #'
 #' @return tibble. A tibble with filled in Genetic_Sex information.
 #' A warning is printed if any entries have been updated, requesting manual changes to be made to the .fam/.ind files of the poseidon package.
@@ -218,12 +225,29 @@ fill_genetic_sex <- function(input_janno_table, genetic_sex_table) {
       old_gsex = .data$Genetic_Sex,
       Genetic_Sex = dplyr::na_if(.data$Genetic_Sex, "U")
       )
+  if ( ! "Sex_Determination_Note" %in% names(input) ) {
+    input <- input %>% dplyr::mutate(
+      Sex_Determination_Note = NA_character_
+    )
+  }
 
   output_janno <- dplyr::full_join(input, genetic_sex_table, by = "Poseidon_ID") %>%
     dplyr::mutate(
-      Genetic_Sex = dplyr::coalesce(.data$Genetic_Sex.x, .data$Genetic_Sex.y)
+      Genetic_Sex = dplyr::coalesce(.data$Genetic_Sex.x, .data$Genetic_Sex.y),
+      Sex_Determination_Note = dplyr::case_when(
+        old_gsex == "U" && Genetic_Sex != "U" ~ .data$Sex_Determination_Note.y,
+        old_gsex == "U" && Genetic_Sex == "U" ~ dplyr::coalesce(.data$Sex_Determination_Note.x, .data$Sex_Determination_Note.y),
+        old_gsex != "U" ~ .data$Sex_Determination_Note.x,
+        TRUE ~ "n/a"
+      )
     ) %>%
-    dplyr::select(-.data$Genetic_Sex.x, -.data$Genetic_Sex.y, -.data$old_gsex)
+    dplyr::select(
+      -.data$Genetic_Sex.x,
+      -.data$Genetic_Sex.y,
+      -.data$old_gsex,
+      -.data$Sex_Determination_Note.x,
+      -.data$Sex_Determination_Note.y
+      )
 
   if ( ! identical(input$old_gsex, output_janno$Genetic_Sex)) {
     warning("

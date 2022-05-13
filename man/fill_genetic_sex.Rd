@@ -9,7 +9,7 @@ fill_genetic_sex(input_janno_table, genetic_sex_table)
 \arguments{
 \item{input_janno_table}{tibble. A standardised janno tibble, as returned by \link[eager2poseidon:standardise_janno]{standardise_janno}.}
 
-\item{genetic_sex_table}{tibble. A tibble containing the Poseidon_Id and Sex of inferred genetic sex of each sample}
+\item{genetic_sex_table}{tibble. A tibble containing the Poseidon_Id and Sex of inferred genetic sex of each sample, as well as a Sex_Determination_Note}
 }
 \value{
 tibble. A tibble with filled in Genetic_Sex information.

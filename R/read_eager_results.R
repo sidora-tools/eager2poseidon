@@ -285,22 +285,22 @@ read_eager_stats_table <- function(general_stats_fn, tsv_data, snp_cutoff = 50) 
       Genetic_Sex = infer_genetic_sex(.data$x_rate, .data$y_rate)
     ) %>%
     dplyr::mutate(
-      Note = paste0("x-rate: ",
+      Sex_Determination_Note = paste0("x-rate: ",
                     format(.data$x_rate, nsmall = 3, digits = 0, trim = T),
                     " +- ",
                     format(.data$x_err, nsmall = 3, digits = 0, trim = T),
                     ", y-rate: ",
                     format(.data$y_rate, nsmall = 3, digits = 0, trim = T),
                     " +- ",
-                    format(.data$y_err, nsmall = 3, digits = 0, trim = T),
-                    ";")
+                    format(.data$y_err, nsmall = 3, digits = 0, trim = T)
+                    )
     ) %>%
     dplyr::select(
       .data$Sample,
       .data$Genetic_Sex,
       .data$Damage,
       .data$Nr_SNPs,
-      .data$Note
+      .data$Sex_Determination_Note
       )
 
   ## Join it all together
