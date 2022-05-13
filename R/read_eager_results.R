@@ -276,10 +276,11 @@ read_eager_stats_table <- function(general_stats_fn, tsv_data, snp_cutoff = 50) 
     dplyr::mutate(filtered_mapped_reads = dplyr::na_if(.data$filtered_mapped_reads, 0)) %>%
     dplyr::group_by(.data$Sample) %>%
     dplyr::summarise(
-      x_rate = stats::na.omit(.data$sexdet_rate_x),
-      y_rate = stats::na.omit(.data$sexdet_rate_y),
-      x_err = stats::na.omit(.data$sexdet_err_x),
-      y_err = stats::na.omit(.data$sexdet_err_y),
+      ## Sexdet stats are tricky cause they can be at sample or library level. Using `first` should always prefer sample level if mor than one exists.
+      x_rate = dplyr::first(stats::na.omit(.data$sexdet_rate_x)),
+      y_rate = dplyr::first(stats::na.omit(.data$sexdet_rate_y)),
+      x_err = dplyr::first(stats::na.omit(.data$sexdet_err_x)),
+      y_err = dplyr::first(stats::na.omit(.data$sexdet_err_y)),
       Damage = stats::weighted.mean(stats::na.omit(.data$damage_5p1), stats::na.omit(.data$filtered_mapped_reads)),
       Nr_SNPs = max(.data$covered_snps, na.rm = T),
       Genetic_Sex = infer_genetic_sex(.data$x_rate, .data$y_rate)
