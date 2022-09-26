@@ -12,7 +12,7 @@ remotes::install_github("sidora-tools/eager2poseidon")
 ```
 
 # Quickstart
-The Rsctipt `eager2poseidon.R` can be ran directly from the command line. The helptext provided with `-h` 
+The Rscript `eager2poseidon.R` can be ran directly from the command line. The helptext provided with `-h` 
 explains all the arguments required for the script. Default values to optional arguments are shown in square 
 brackets `[]` following the argument explanation.
 ```
