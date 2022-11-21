@@ -98,10 +98,12 @@ fill_in_janno <- function(input_janno_table, external_results_table, genotype_pl
       .data$Contamination_Meas,
       .data$Contamination_Note,
       tidyselect::any_of(
+        tidyselect::starts_with("Relation_"),
+      ),
+      tidyselect::any_of(
         c(
           "Alternative_IDs",
           "Group_Name",
-          tidyselect::starts_with("Relation_*"),
           "Genetic_Sex",
           "MT_Haplogroup",
           "Y_Haplogroup",
