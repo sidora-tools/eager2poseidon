@@ -72,10 +72,10 @@ read_eager_tsv <- function(eager_tsv_fn, keep_only = "none") {
   ## Separate the Library ID to pandora Library ID and Sequencing ID if the latter was used
   tsv_data <- tsv_data %>%
     dplyr::mutate(
-      Library = substr(.data$Library_ID, 1, 12),
+      Library = substr(.data$Library_ID, 1, nchar(.data$Library_ID)-4),
       Seq_Type = dplyr::case_when(
         ## First try to infer from Lib_ID
-        substr(.data$Library_ID, 14, 15) != "" ~ substr(.data$Library_ID, 14, 15) %>% format_for_poseidon(., "Capture_Type"),
+        substr(.data$Library_ID, nchar(.data$Library_ID)-2, nchar(.data$Library_ID)-1) != "" ~ substr(.data$Library_ID, nchar(.data$Library_ID)-2, nchar(.data$Library_ID)-1) %>% format_for_poseidon(., "Capture_Type"),
         ## Then check R1, if provided. Assumes R1 file name starts with pandora full sequencing ID
         !is.na(.data$R1) ~ basename(.data$R1) %>%
           substr(., 14, 15) %>%
