@@ -202,7 +202,7 @@ read_eager_stats_table <- function(general_stats_fn, tsv_data, snp_cutoff = 50) 
   pull_samples <- c(unique(tsv_data$Sample_Name), tsv_data$Library_ID) %>% sort()
 
   ## Load stats table and keep relevant columns and lines.
-  general_stats <- readr::read_tsv(general_stats_fn, na = c("", "N/A", "NA")) %>%
+  general_stats <- readr::read_tsv(general_stats_fn, na = c("", "N/A", "NA"), show_col_types = F) %>%
     dplyr::filter(.data$Sample %in% pull_samples) %>%
     dplyr::select(
       .data$Sample,

@@ -30,6 +30,11 @@ parser <- add_option(parser, c("-c", "--credentials"),
   action = "store", dest = "credentials",
   help = "Path to a credentials file containing four lines listing the database host, the port of the database server, user and password, respectively."
 )
+parser <- add_option(parser, c("-S", "--single_stranded_sample_suffix"),
+  type = "character", default='',
+  action = "store", dest = "ss_suffix",
+  help = "If a suffix was used to differentiate ssDNA from dsDNA samples in the eager input TSV, this suffix should be provided here. e.g. '_ss' if the single-stranded version of 'ABC001' was specified as 'ABC001_ss'."
+)
 parser <- add_option(parser, c("-t", "--trust_uncalibrated_dates"),
   type = "logical",
   action = "store_true", default = F, dest = "trust_uncalibrated_dates",
@@ -40,7 +45,7 @@ parser <- add_option(parser, c("-k", "--keep_only"),
   action = "store", default = "none", dest = "keep_only",
   help = "Can be set to 'none', 'single', or 'double'. If set to 'single' or 'double', will keep only information for libraries with the specified strandedness. If 'none', all information is retained. ['none']"
 )
-parser <- add_option(parser, c("-s", "--snp_cutoff"),
+parser <- add_option(parser, c("-s", "--contamination_snp_cutoff"),
   type = "integer",
   action = "store", default = "100", dest = "snp_cutoff",
   help = "The snp cutoff for nuclear contamination results. Nuclear contamination results with fewer than this number of SNPs will be ignored when calculating the values for 'Contamination_*' columns. [100]"
@@ -79,7 +84,8 @@ external_results_table <- collate_external_results(
   credentials = args$credentials,
   keep_only = args$keep_only,
   trust_uncalibrated_dates = args$trust_uncalibrated_dates,
-  snp_cutoff = args$snp_cutoff
+  snp_cutoff = args$snp_cutoff,
+  ss_suffix = args$ss_suffix
 )
 
 output_janno <- fill_in_janno(

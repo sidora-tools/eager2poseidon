@@ -25,7 +25,7 @@ import_pandora_data <- function(sample_ids, credentials, trust_uncalibrated_date
     ## Remove duplicate lines due to multiple Extracts/Libs/Sequencings per individual
     dplyr::distinct() %>%
     dplyr::mutate(
-      Poseidon_ID = .data$individual.Full_Individual_Id,
+      Pandora_ID = .data$individual.Full_Individual_Id,
       Collection_ID = .data$individual.Archaeological_ID,
       Site = .data$site.Name,
       Country = .data$site.Country,
@@ -55,8 +55,10 @@ import_pandora_data <- function(sample_ids, credentials, trust_uncalibrated_date
       ),
       ## Initialise These as empty for calibration to potentially fill in.
       ##    Need to exist for dplyr::coalesce() to not complain about columns not existing.
-      Date_BC_AD_Start = NA_integer_,
-      Date_BC_AD_Stop = NA_integer_,
+      Date_BC_AD_Start_1Sigma = NA_integer_,
+      Date_BC_AD_Stop_1Sigma = NA_integer_,
+      Date_BC_AD_Start_2Sigma = NA_integer_,
+      Date_BC_AD_Stop_2Sigma = NA_integer_,
       Date_BC_AD_Median = NA_integer_,
       Date_C14_Uncal_BP = NA_integer_,
       Date_C14_Uncal_BP_Err = NA_integer_,
@@ -91,13 +93,13 @@ import_pandora_data <- function(sample_ids, credentials, trust_uncalibrated_date
   pandora_table <- pandora_table %>%
     dplyr::mutate(
       ## Prioritise pandora's calibrated dates when available.
-      Date_BC_AD_Start = dplyr::coalesce(.data$Date_BC_AD_Start_pandora, .data$Date_BC_AD_Start),
-      Date_BC_AD_Stop = dplyr::coalesce(.data$Date_BC_AD_Stop_pandora, .data$Date_BC_AD_Stop),
+      Date_BC_AD_Start = dplyr::coalesce(.data$Date_BC_AD_Start_pandora, .data$Date_BC_AD_Start_2Sigma),
+      Date_BC_AD_Stop = dplyr::coalesce(.data$Date_BC_AD_Stop_pandora, .data$Date_BC_AD_Stop_2Sigma),
       Date_Type = dplyr::coalesce(.data$Date_Type_pandora, .data$Date_Type_quickcal),
       Date_Note = dplyr::coalesce(.data$Date_Note_pandora, .data$Date_Note_quickcal)
     ) %>%
     dplyr::select(
-      .data$Poseidon_ID,
+      .data$Pandora_ID,
       .data$Collection_ID,
       .data$Country,
       .data$Site,
@@ -145,7 +147,7 @@ get_individual_pandora_data <- function(sample_ids, credentials) {
     )
   ) %>% sidora.core::convert_all_ids_to_values(con = con)
   DBI::dbDisconnect(con)
-  pandora_table <- pandora_table %>% dplyr::filter(.data$individual.Full_Individual_Id %in% sample_ids$Poseidon_ID)
+  pandora_table <- pandora_table %>% dplyr::filter(.data$individual.Full_Individual_Id %in% sample_ids$Pandora_ID)
 
   write("Information successfully pulled from Pandora.", file = stderr())
 

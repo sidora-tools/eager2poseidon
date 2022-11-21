@@ -197,15 +197,20 @@ standardise_janno <- function(janno_fn) {
 #'
 #' @inheritParams import_pandora_data
 #' @inheritParams import_eager_results
+#' @param ss_suffix character. The suffix added to the Sample_Name of single stranded samples for eager processing, if any.
 #'
 #' @return A tibble with the collected results from Pandora and eager.
 #' @export
 #'
-collate_external_results <- function(sample_ids, eager_tsv_fn, general_stats_fn, credentials, keep_only = "none", trust_uncalibrated_dates = F, snp_cutoff) {
-  pandora_table <- import_pandora_data(sample_ids, credentials, trust_uncalibrated_dates)
+collate_external_results <- function(sample_ids, eager_tsv_fn, general_stats_fn, credentials, keep_only = "none", trust_uncalibrated_dates = F, snp_cutoff, ss_suffix) {
+  ## Infer Pandora_IDs from Poseidon_IDs by removing suffix
+  sample_ids <- sample_ids %>% dplyr::mutate(Pandora_ID=sub(paste0(ss_suffix,"$"), '', .data$Poseidon_ID))
+  pandora_table <- import_pandora_data(sample_ids %>% dplyr::select(Pandora_ID), credentials, trust_uncalibrated_dates) %>%
+    dplyr::full_join(sample_ids, ., by = "Pandora_ID")
   eager_table <- import_eager_results(eager_tsv_fn, general_stats_fn, keep_only, snp_cutoff)
 
-  external_results <- dplyr::full_join(pandora_table, eager_table, by = c("Poseidon_ID" = "Sample_Name"))
+  external_results <- dplyr::full_join(pandora_table, eager_table, by = c("Poseidon_ID" = "Sample_Name")) %>%
+    dplyr::select(-.data$Pandora_ID)
 
   return(external_results)
 }

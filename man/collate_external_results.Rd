@@ -11,7 +11,8 @@ collate_external_results(
   credentials,
   keep_only = "none",
   trust_uncalibrated_dates = F,
-  snp_cutoff
+  snp_cutoff,
+  ss_suffix
 )
 }
 \arguments{
@@ -35,6 +36,8 @@ If set to TRUE, then \link[poseidonR:quickcalibrate]{quickcalibrate()} is used t
 
 \item{snp_cutoff}{integer. The minimum number of SNPs used for nuclear contamination results, for the results to be
 considered trustworthy. Any values from libraries with fewer than this number of SNPs are ignored.}
+
+\item{ss_suffix}{character. The suffix added to the Sample_Name of single stranded samples for eager processing, if any.}
 }
 \value{
 A tibble with the collected results from Pandora and eager.

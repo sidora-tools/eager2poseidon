@@ -1,3 +1,7 @@
+# eager2poseidon 0.4.0
+
+* Update C14 quickcalibrate backend for compatibility with `poseidonR` v0.9.0.
+
 # eager2poseidon 0.3.1
 
 * x-/y-rates from sexdeterrine are now reported in `Sex_Determination_Note` field, and updated when the Genetic_Sex is updated or the field is missing.
