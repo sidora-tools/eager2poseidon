@@ -149,6 +149,10 @@ get_individual_pandora_data <- function(sample_ids, credentials) {
   DBI::dbDisconnect(con)
   pandora_table <- pandora_table %>% dplyr::filter(.data$individual.Full_Individual_Id %in% sample_ids$Pandora_ID)
 
+  if ( nrow(pandora_table) == 0 ) {
+    stop("No matches found in Pandora's individual.Full_Individual_Id column for the provided list of sample IDs.")
+  }
+
   write("Information successfully pulled from Pandora.", file = stderr())
 
   return(pandora_table)
