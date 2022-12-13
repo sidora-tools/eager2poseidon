@@ -2,6 +2,7 @@
 
 export(collapse_for_poseidon)
 export(collate_external_results)
+export(compile_eager_result_tables)
 export(fill_in_janno)
 export(get_individual_pandora_data)
 export(import_eager_results)
