@@ -2,3 +2,4 @@
 ^\.Rproj\.user$
 ^LICENSE\.md$
 ^eager2poseidon\.R$
+^.nextflow
