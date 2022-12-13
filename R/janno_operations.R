@@ -207,7 +207,7 @@ standardise_janno <- function(janno_fn) {
 collate_external_results <- function(sample_ids, eager_tsv_fn, general_stats_fn, credentials, keep_only = "none", trust_uncalibrated_dates = F, snp_cutoff, ss_suffix) {
   ## Infer Pandora_IDs from Poseidon_IDs by removing suffix
   sample_ids <- sample_ids %>% dplyr::mutate(Pandora_ID=sub(paste0(ss_suffix,"$"), '', .data$Poseidon_ID))
-  pandora_table <- import_pandora_data(sample_ids %>% dplyr::select(Pandora_ID), credentials, trust_uncalibrated_dates) %>%
+  pandora_table <- import_pandora_data(sample_ids %>% dplyr::select(.data$Pandora_ID), credentials, trust_uncalibrated_dates) %>%
     dplyr::full_join(sample_ids, ., by = "Pandora_ID")
   eager_table <- import_eager_results(eager_tsv_fn, general_stats_fn, keep_only, snp_cutoff)
 
