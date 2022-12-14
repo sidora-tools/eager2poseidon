@@ -163,6 +163,18 @@ compile_eager_result_tables <- function(tsv_table=NULL, sexdet_table=NULL, snpco
 #' @export
 compile_across_lib_results <- function(x, snp_cutoff=100) {
   result <- x %>%
+    dplyr::mutate(
+      Contamination = dplyr::case_when(
+        .data$Contamination_NrSnps < snp_cutoff ~ NA_real_,
+        TRUE ~ .data$Contamination
+        # TRUE ~ format(.data$x_contamination, nsmall = 3, digits = 0, trim = T)
+      ),
+      Contamination_Err = dplyr::case_when(
+        .data$Contamination_NrSnps < snp_cutoff ~ NA_real_,
+        TRUE ~ .data$Contamination_Err
+        # TRUE ~ format(.data$x_contamination_error, nsmall = 3, digits = 0, trim = T)
+      )
+    ) %>%
     dplyr::group_by(.data$Sample_Name)%>%
     dplyr::summarise(
       contamination_weighted_mean = stats::weighted.mean(.data$Contamination, .data$Contamination_NrSnps, na.rm = T),
