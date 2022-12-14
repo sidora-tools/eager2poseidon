@@ -41,7 +41,7 @@ compile_eager_result_tables <- function(tsv_table=NULL, sexdet_table=NULL, snpco
     dplyr::summarise(.groups='keep',
                      UDG=dplyr::case_when(
                        unique(.data$UDG_Treatment) %>% length(.) > 1 ~ 'mixed',
-                       TRUE ~ unique(.data$UDG_Treatment)
+                       TRUE ~ format_for_poseidon(unique(.data$UDG_Treatment), "UDG")
                      ),
                      Nr_Libs=dplyr::n(),
                      Capture_Type=dplyr::if_else(
@@ -51,11 +51,7 @@ compile_eager_result_tables <- function(tsv_table=NULL, sexdet_table=NULL, snpco
                        ## FALSE
                        paste0(rep(capture_type, .data$Nr_Libs), collapse=";")
                      ),
-                     Library_Built=dplyr::case_when(
-                       .data$Strandedness == 'single' ~ 'ss',
-                       .data$Strandedness == 'double' ~ 'ds',
-                       TRUE ~ NA_character_
-                     )
+                     Library_Built=format_for_poseidon(.data$Strandedness, "Library_Built")
     ) %>%
     dplyr::left_join(tsv_table, ., by=c("Sample_Name", "Strandedness"))
 
