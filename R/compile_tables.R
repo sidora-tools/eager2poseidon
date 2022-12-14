@@ -12,20 +12,53 @@ if (getRversion() >= "2.15.1") utils::globalVariables(c(".")) ## Disables notes 
 #' @param nuccont_table A tibble withthe eager nuclear contamination results as returned by \link[eagerR]{read_angsd_cont_json}.
 #' @param contamination_method The contamination method to keep. Can be either "1" or "2".
 #' @param contamination_algorithm The estimation algorithm to keep. Can be "ml" or "mom".
+#' @param capture_type character. The Capture_Type. Assumes all libraries have the same one. Defaults to NA, which will disable inference of the Capture_Type and return a dummy column.
 #' @inheritParams infer_genetic_sex
 #'
 #' @return A tibble with the compiled information from the provided eager output tables.
 #' @export
 #'
-compile_eager_result_tables <- function(tsv_table=NULL, sexdet_table=NULL, snpcov_table=NULL, dmg_table=NULL, endogenous_table=NULL, nuccont_table=NULL, contamination_method="1", contamination_algorithm = "ml", XX_cutoffs = c(0.7, 1.2, 0.0, 0.1), XY_cutoffs = c(0.2, 0.6, 0.3, 0.6)) {
+compile_eager_result_tables <- function(tsv_table=NULL, sexdet_table=NULL, snpcov_table=NULL, dmg_table=NULL, endogenous_table=NULL, nuccont_table=NULL, contamination_method="1", contamination_algorithm = "ml", XX_cutoffs = c(0.7, 1.2, 0.0, 0.1), XY_cutoffs = c(0.2, 0.6, 0.3, 0.6), capture_type = NA_character_) {
 
   ## Without a TSV info table, nothing can be compiled
   if (is.null(tsv_table)) {stop("[compile_eager_result_tables()]: tsv_table is required.")}
 
-  ## Validate contamination input params
+  ## Validate input params
   if (! contamination_method %in% c("1","2")) { stop(paste0("[compile_eager_result_tables()]: Invalid preferred nuclear contamination estimation method provided.\n\tValid entries are c('1','2').\n\tYou provided: ",contamination_method))}
 
   if (! contamination_algorithm %in% c("ml","mom")) { stop(paste0("[compile_eager_result_tables()]: Invalid preferred nuclear contamination estimation method provided.\n\tValid entries are c('ml','mom').\n\tYou provided: ", contamination_algorithm))}
+
+  if (! capture_type %in% c("Shotgun", "1240K", "OtherCapture", "ReferenceGenome", NA_character_)) {stop(paste0("[compile_eager_result_tables()]: Invalid capture type provided.\n\tValid entries are c('Shotgun', '1240K', 'OtherCapture', 'ReferenceGenome', NA_character_).\n\tYou provided: ", capture_type))}
+
+  ###################
+  ## TSV Lib infos ##
+  ###################
+
+  ## Add number of libraries, capture type, overall UDG treatment and Strandedness columns
+  tsv_table <- tsv_table %>%
+    dplyr::select(.data$Sample_Name, .data$Library_ID, .data$Strandedness, .data$UDG_Treatment) %>%
+    dplyr::group_by(.data$Sample_Name, .data$Strandedness) %>%
+    dplyr::summarise(.groups='keep',
+                     UDG=dplyr::case_when(
+                       unique(.data$UDG_Treatment) %>% length(.) > 1 ~ 'mixed',
+                       TRUE ~ unique(.data$UDG_Treatment)
+                     ),
+                     Nr_Libs=dplyr::n(),
+                     Capture_Type=dplyr::if_else(
+                       is.na(capture_type),
+                       ##TRUE
+                       NA_character_,
+                       ## FALSE
+                       paste0(rep(capture_type, .data$Nr_Libs), collapse=";")
+                     ),
+                     Library_Built=dplyr::case_when(
+                       .data$Strandedness == 'single' ~ 'ss',
+                       .data$Strandedness == 'double' ~ 'ds',
+                       TRUE ~ NA_character_
+                     )
+    ) %>%
+    dplyr::left_join(tsv_table, ., by=c("Sample_Name", "Strandedness"))
+
 
   ############
   ## SEXDET ##

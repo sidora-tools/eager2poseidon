@@ -12,7 +12,7 @@ compile_across_lib_results(x, snp_cutoff = 100)
 \item{snp_cutoff}{integer. The minimum number of SNPs, below which nuclear contamination results should be ignored.}
 }
 \value{
-A tibble with the following columns replaced by weighted sums on the sample level: c(Contamination, Contamination_Error, Damage).
+A tibble with the following columns replaced by weighted sums on the sample level: c(Contamination, Contamination_Error, Contamination_Meas, Damage).
 }
 \description{
 Function to calculate sample_level damage and contamination using a weighted mean across libraries
