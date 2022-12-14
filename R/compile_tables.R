@@ -196,7 +196,7 @@ compile_across_lib_results <- function(x, snp_cutoff=100) {
       sample_Contamination_Note = dplyr::if_else(
         is.na(.data$Contamination),
         #TRUE
-        NA_character_,
+        paste0("No results found, or no libraries exceeded cutoff of ", snp_cutoff," SNPs after depth filtering."),
         #FALSE
         paste0("Nr Snps (per library): ", paste(.data$Contamination_NrSnps, collapse = ";"), ". Estimate and error are weighted means of values per library. Libraries with fewer than ", snp_cutoff, " were excluded.")
       ),
