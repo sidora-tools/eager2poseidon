@@ -151,3 +151,58 @@ compile_eager_result_tables <- function(tsv_table=NULL, sexdet_table=NULL, snpco
   }
   tsv_table
 }
+
+#' Compile library level results to sample level
+#'
+#' Function to calculate sample_level damage and contamination using a weighted mean across libraries
+#'
+#' @param x A Tibble as given by \link[eager2poseidon]{compile_eager_result_tables}.
+#' @param snp_cutoff integer. The minimum number of SNPs, below which nuclear contamination results should be ignored.
+#'
+#' @return A tibble with the following columns replaced by weighted sums on the sample level: c(Contamination, Contamination_Error, Damage).
+#' @export
+compile_across_lib_results <- function(x, snp_cutoff=100) {
+  result <- x %>%
+    dplyr::group_by(.data$Sample_Name)%>%
+    dplyr::summarise(
+      contamination_weighted_mean = stats::weighted.mean(.data$Contamination, .data$Contamination_NrSnps, na.rm = T),
+      contamination_weigthed_mean_err = stats::weighted.mean(.data$Contamination_Err, .data$Contamination_NrSnps, na.rm = T),
+      sample_Contamination = dplyr::if_else(
+        is.nan(.data$contamination_weighted_mean),
+        #TRUE
+        NA_character_,
+        #FALSE
+        .data$contamination_weighted_mean %>% format(., nsmall = 3, digits = 1, trim = T) ## Change to type 'char' and format to three decimals
+      ),
+      sample_Contamination_Err = dplyr::if_else(
+        is.nan(.data$contamination_weigthed_mean_err),
+        #TRUE
+        NA_character_,
+        #FALSE
+        .data$contamination_weigthed_mean_err %>% format(., nsmall = 3, digits = 1, trim = T) ## Change to type 'char' and format to three decimals
+      ),
+      sample_Contamination_Note = dplyr::if_else(
+        is.na(.data$Contamination),
+        #TRUE
+        NA_character_,
+        #FALSE
+        paste0("Nr Snps (per library): ", paste(.data$Contamination_NrSnps, collapse = ";"), ". Estimate and error are weighted means of values per library. Libraries with fewer than ", snp_cutoff, " were excluded.")
+      ),
+      mean_damage = stats::weighted.mean(.data$Damage, .data$damage_num_reads, na.rm=T),
+      sample_Damage = dplyr::if_else(
+        is.nan(.data$mean_damage),
+        ## TRUE
+        NA_character_,
+        ## FALSE
+        .data$mean_damage %>% format(., nsmall = 3, digits = 1, trim = T) ## Change to type 'char' and format to three decimals
+      )
+    ) %>%
+    ## Keep sample level columns, and convert to their poseidon names
+    dplyr::select( tidyselect::starts_with("sample_") ) %>%
+    dplyr::rename_with( ~sub('^sample_', '', .)) %>%
+    dplyr::left_join(x, ., by="Sample_Name", suffix = c(".x", ".y")) %>%
+    ## Remove duplicate columns from input data, and rename new columns to poseidon names again
+    dplyr::select(-tidyselect::ends_with(".x")) %>%
+    dplyr::rename_with(.fn=~sub('\\.y$', '', .), .cols=tidyselect::ends_with(".y"))
+  result
+}
