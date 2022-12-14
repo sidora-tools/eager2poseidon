@@ -159,7 +159,7 @@ compile_eager_result_tables <- function(tsv_table=NULL, sexdet_table=NULL, snpco
 #' @param x A Tibble as given by \link[eager2poseidon]{compile_eager_result_tables}.
 #' @param snp_cutoff integer. The minimum number of SNPs, below which nuclear contamination results should be ignored.
 #'
-#' @return A tibble with the following columns replaced by weighted sums on the sample level: c(Contamination, Contamination_Error, Damage).
+#' @return A tibble with the following columns replaced by weighted sums on the sample level: c(Contamination, Contamination_Error, Contamination_Meas, Damage).
 #' @export
 compile_across_lib_results <- function(x, snp_cutoff=100) {
   result <- x %>%
@@ -199,6 +199,13 @@ compile_across_lib_results <- function(x, snp_cutoff=100) {
         paste0("No results found, or no libraries exceeded cutoff of ", snp_cutoff," SNPs after depth filtering."),
         #FALSE
         paste0("Nr Snps (per library): ", paste(.data$Contamination_NrSnps, collapse = ";"), ". Estimate and error are weighted means of values per library. Libraries with fewer than ", snp_cutoff, " were excluded.")
+      ),
+      sample_Contamination_Meas = dplyr::if_else(
+        is.na(.data$Contamination),
+        #TRUE
+        NA_character_,
+        #FALSE
+        "ANGSD"
       ),
       mean_damage = stats::weighted.mean(.data$Damage, .data$damage_num_reads, na.rm=T),
       sample_Damage = dplyr::if_else(
