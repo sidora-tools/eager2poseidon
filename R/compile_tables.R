@@ -249,7 +249,8 @@ compile_across_lib_results <- function(x, snp_cutoff=100) {
         NA_character_,
         ## FALSE
         .data$mean_damage %>% format(., nsmall = 3, digits = 1, trim = T) ## Change to type 'char' and format to three decimals
-      )
+      ),
+      sample_Library_Names=paste0(.data$Library_ID, collapse=";")
     ) %>%
     ## Keep sample level columns, and convert to their poseidon names
     dplyr::select( tidyselect::starts_with("sample_") ) %>%
