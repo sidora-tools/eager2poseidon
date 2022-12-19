@@ -53,7 +53,9 @@ compile_eager_result_tables <- function(tsv_table=NULL, sexdet_table=NULL, snpco
                      ),
                      Library_Built=format_for_poseidon(.data$Strandedness, "Library_Built")
     ) %>%
-    dplyr::left_join(tsv_table, ., by=c("Sample_Name", "Strandedness"))
+    dplyr::left_join(tsv_table, ., by=c("Sample_Name", "Strandedness")) %>%
+    ## Keep one line per library, otherwise samples with multiple libraries get duplicate entries per library
+    dplyr::distinct()
 
 
   ############
@@ -207,8 +209,9 @@ compile_across_lib_results <- function(x, snp_cutoff=100) {
         # TRUE ~ format(.data$x_contamination_error, nsmall = 3, digits = 0, trim = T)
       )
     ) %>%
-    dplyr::group_by(.data$Sample_Name)%>%
+    dplyr::group_by(.data$Sample_Name) %>%
     dplyr::summarise(
+      .groups = 'keep',
       contamination_weighted_mean = stats::weighted.mean(.data$Contamination, .data$Contamination_NrSnps, na.rm = T),
       contamination_weigthed_mean_err = stats::weighted.mean(.data$Contamination_Err, .data$Contamination_NrSnps, na.rm = T),
       sample_Contamination = dplyr::if_else(
@@ -251,6 +254,8 @@ compile_across_lib_results <- function(x, snp_cutoff=100) {
     ## Keep sample level columns, and convert to their poseidon names
     dplyr::select( tidyselect::starts_with("sample_") ) %>%
     dplyr::rename_with( ~sub('^sample_', '', .)) %>%
+    ## Keep only distinct rows to avoid row duplications
+    dplyr::distinct() %>%
     dplyr::left_join(x, ., by="Sample_Name", suffix = c(".x", ".y")) %>%
     ## Remove duplicate columns from input data, and rename new columns to poseidon names again
     dplyr::select(-tidyselect::ends_with(".x")) %>%
