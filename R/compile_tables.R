@@ -68,7 +68,9 @@ compile_eager_result_tables <- function(tsv_table=NULL, sexdet_table=NULL, snpco
       )
   } else {
     ## Use sexdet results to infer genetic sex based on provided cutoffs, and put together the associated Note field.
-    sexdet <- sexdet_table %>% dplyr::mutate(
+    sexdet <- sexdet_table %>%
+      dplyr::group_by(.data$sexdet_input_bam) %>%
+      dplyr::mutate(
       Genetic_Sex = infer_genetic_sex(.data$sexdet_ratex, .data$sexdet_ratey, XX_cutoffs, XY_cutoffs),
       Sex_Determination_Note = paste0(
           "x-rate: ",
@@ -81,7 +83,8 @@ compile_eager_result_tables <- function(tsv_table=NULL, sexdet_table=NULL, snpco
           format(.data$sexdet_rateerry, nsmall = 3, digits = 1, trim = T)
         )
       ) %>%
-      dplyr::select(.data$sexdet_input_bam, .data$Genetic_Sex, .data$Sex_Determination_Note)
+      dplyr::select(.data$sexdet_input_bam, .data$Genetic_Sex, .data$Sex_Determination_Note) %>%
+      dplyr::ungroup()
     tsv_table <- dplyr::left_join(tsv_table, sexdet, by=c("sexdet_bam"="sexdet_input_bam"))
   }
 
