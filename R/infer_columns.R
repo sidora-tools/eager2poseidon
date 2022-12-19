@@ -10,14 +10,14 @@
 #'
 infer_genetic_sex <- function(x_rate, y_rate, XX_cutoffs = c(0.7, 1.2, 0.0, 0.1), XY_cutoffs = c(0.2, 0.6, 0.3, 0.6)) {
 
-  if (is.na(x_rate) || is.na(y_rate)) {
+  if (is.na(x_rate) | is.na(y_rate)) {
     gsex <- "U"
     return (gsex)
   }
 
-  if ( x_rate >= XX_cutoffs[1] && x_rate <= XX_cutoffs[2] && y_rate >= XX_cutoffs[3] && y_rate <= XX_cutoffs[4]) {
+  if ( x_rate >= XX_cutoffs[1] & x_rate <= XX_cutoffs[2] & y_rate >= XX_cutoffs[3] & y_rate <= XX_cutoffs[4]) {
     gsex <- "F"
-  } else if ( x_rate >= XY_cutoffs[1] && x_rate <= XY_cutoffs[2] && y_rate >= XY_cutoffs[3] && y_rate <= XY_cutoffs[4]) {
+  } else if ( x_rate >= XY_cutoffs[1] & x_rate <= XY_cutoffs[2] & y_rate >= XY_cutoffs[3] & y_rate <= XY_cutoffs[4]) {
     gsex <- "M"
   } else {
     gsex <- "U"
