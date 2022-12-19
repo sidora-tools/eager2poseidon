@@ -14,7 +14,8 @@ compile_eager_result_tables(
   contamination_method = "1",
   contamination_algorithm = "ml",
   XX_cutoffs = c(0.7, 1.2, 0, 0.1),
-  XY_cutoffs = c(0.2, 0.6, 0.3, 0.6)
+  XY_cutoffs = c(0.2, 0.6, 0.3, 0.6),
+  capture_type = NA_character_
 )
 }
 \arguments{
@@ -37,6 +38,8 @@ compile_eager_result_tables(
 \item{XX_cutoffs}{numeric. A vector containing the minimum x_rate, maximum x_rate, minimum y_rate and maximum y_rate for XX calls.}
 
 \item{XY_cutoffs}{numeric. A vector containing the minimum x_rate, maximum x_rate, minimum y_rate and maximum y_rate for XY calls.}
+
+\item{capture_type}{character. The Capture_Type. Assumes all libraries have the same one. Defaults to NA, which will disable inference of the Capture_Type and return a dummy column.}
 }
 \value{
 A tibble with the compiled information from the provided eager output tables.
