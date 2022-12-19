@@ -229,14 +229,14 @@ compile_across_lib_results <- function(x, snp_cutoff=100) {
         .data$contamination_weigthed_mean_err %>% format(., nsmall = 3, digits = 1, trim = T) ## Change to type 'char' and format to three decimals
       ),
       sample_Contamination_Note = dplyr::if_else(
-        is.na(.data$Contamination),
+        is.na(.data$sample_Contamination),
         #TRUE
         paste0("No results found, or no libraries exceeded cutoff of ", snp_cutoff," SNPs after depth filtering."),
         #FALSE
         paste0("Nr Snps (per library): ", paste(.data$Contamination_NrSnps, collapse = ";"), ". Estimate and error are weighted means of values per library. Libraries with fewer than ", snp_cutoff, " were excluded.")
       ),
       sample_Contamination_Meas = dplyr::if_else(
-        is.na(.data$Contamination),
+        is.na(.data$sample_Contamination),
         #TRUE
         NA_character_,
         #FALSE
