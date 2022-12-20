@@ -212,6 +212,7 @@ compile_across_lib_results <- function(x, snp_cutoff=100) {
     dplyr::group_by(.data$Sample_Name) %>%
     dplyr::summarise(
       .groups = 'keep',
+      ## Contamination columns are weighted mean from libraries.
       contamination_weighted_mean = stats::weighted.mean(.data$Contamination, .data$Contamination_NrSnps, na.rm = T),
       contamination_weigthed_mean_err = stats::weighted.mean(.data$Contamination_Err, .data$Contamination_NrSnps, na.rm = T),
       sample_Contamination = dplyr::if_else(
@@ -242,6 +243,7 @@ compile_across_lib_results <- function(x, snp_cutoff=100) {
         #FALSE
         "ANGSD"
       ),
+      ## Damage is weighted mean of damage from each library
       mean_damage = stats::weighted.mean(.data$Damage, .data$damage_num_reads, na.rm=T),
       sample_Damage = dplyr::if_else(
         is.nan(.data$mean_damage),
@@ -250,6 +252,16 @@ compile_across_lib_results <- function(x, snp_cutoff=100) {
         ## FALSE
         .data$mean_damage %>% format(., nsmall = 3, digits = 1, trim = T) ## Change to type 'char' and format to three decimals
       ),
+      ## Endogenous is max value across all libraries.
+      sample_Endogenous = dplyr::if_else(
+        ## If all values are NA, then return NA (max complains is only NAs are given). Otherwise return max after removing NAs.
+        sum(is.na(.data$Endogenous)) == length(.data$Endogenous),
+        ## TRUE
+        NA_real_,
+        ## FALSE
+        max(.data$Endogenous, na.rm=T)
+        ),
+      ## Keep track of libraries in the results
       sample_Library_Names=paste0(.data$Library_ID, collapse=";")
     ) %>%
     ## Keep sample level columns, and convert to their poseidon names
