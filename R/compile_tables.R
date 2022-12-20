@@ -199,11 +199,13 @@ compile_across_lib_results <- function(x, snp_cutoff=100) {
   result <- x %>%
     dplyr::mutate(
       Contamination = dplyr::case_when(
+        is.na(.data$Contamination_NrSnps) ~ NA_real_, ## Only comes up if TSV results do not fully match final contamination (i.e. more libs added but not processed yet)
         .data$Contamination_NrSnps < snp_cutoff ~ NA_real_,
         TRUE ~ .data$Contamination
         # TRUE ~ format(.data$x_contamination, nsmall = 3, digits = 0, trim = T)
       ),
       Contamination_Err = dplyr::case_when(
+        is.na(.data$Contamination_NrSnps) ~ NA_real_, ## Only comes up if TSV results do not fully match final contamination (i.e. more libs added but not processed yet)
         .data$Contamination_NrSnps < snp_cutoff ~ NA_real_,
         TRUE ~ .data$Contamination_Err
         # TRUE ~ format(.data$x_contamination_error, nsmall = 3, digits = 0, trim = T)
@@ -259,6 +261,8 @@ compile_across_lib_results <- function(x, snp_cutoff=100) {
         ## TRUE
         NA_real_,
         ## FALSE
+        ## For some reason, if all values are NA, this still prints out an error that it will return -Inf,
+        ##    but the endogenous valus is correctly inferred.
         max(.data$Endogenous, na.rm=T)
         ),
       ## Keep track of libraries in the results
