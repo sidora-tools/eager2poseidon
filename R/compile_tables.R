@@ -266,7 +266,7 @@ compile_across_lib_results <- function(x, snp_cutoff=100) {
         max(.data$Endogenous, na.rm=T)
         ),
       ## Keep track of libraries in the results
-      sample_Library_Names=paste0(.data$Library_ID, collapse=";")
+      sample_Library_Names=vctrs::vec_unique(.data$Library_ID) %>% paste0(., collapse=";")
     ) %>%
     ## Keep sample level columns, and convert to their poseidon names
     dplyr::select( tidyselect::starts_with("sample_") ) %>%
