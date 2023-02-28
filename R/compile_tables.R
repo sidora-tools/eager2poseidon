@@ -43,8 +43,7 @@ compile_eager_result_tables <- function(tsv_table=NULL, sexdet_table=NULL, snpco
                        unique(.data$UDG_Treatment) %>% length(.) > 1 ~ 'mixed',
                        TRUE ~ format_for_poseidon(unique(.data$UDG_Treatment), "UDG")
                      ),
-                     Nr_Libraries=dplyr::n(),
-                     Nr_Libs=base::unique(.data$Library_ID) %>% dplyr::count(),
+                     Nr_Libraries=vctrs::vec_unique_count(.data$Library_ID),
                      Capture_Type=dplyr::if_else(
                        is.na(capture_type),
                        ##TRUE
