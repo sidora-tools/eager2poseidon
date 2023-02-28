@@ -44,6 +44,7 @@ compile_eager_result_tables <- function(tsv_table=NULL, sexdet_table=NULL, snpco
                        TRUE ~ format_for_poseidon(unique(.data$UDG_Treatment), "UDG")
                      ),
                      Nr_Libraries=dplyr::n(),
+                     Nr_Libs=unique(.data$Library_ID) %>% count(),
                      Capture_Type=dplyr::if_else(
                        is.na(capture_type),
                        ##TRUE
