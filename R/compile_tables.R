@@ -236,7 +236,7 @@ compile_across_lib_results <- function(x, snp_cutoff=100) {
         #TRUE
         paste0("No results found, or no libraries exceeded cutoff of ", snp_cutoff," SNPs after depth filtering."),
         #FALSE
-        paste0("Nr Snps (per library): ", paste(.data$Contamination_NrSnps, collapse = ";"), ". Estimate and error are weighted means of values per library. Libraries with fewer than ", snp_cutoff, " were excluded.")
+        create_contamination_note(.data$Library_ID, .data$Contamination_NrSnps, snp_cutoff)
       ),
       sample_Contamination_Meas = dplyr::if_else(
         is.na(.data$sample_Contamination),
@@ -278,4 +278,20 @@ compile_across_lib_results <- function(x, snp_cutoff=100) {
     dplyr::select(-tidyselect::ends_with(".x")) %>%
     dplyr::rename_with(.fn=~sub('\\.y$', '', .), .cols=tidyselect::ends_with(".y"))
   result
+}
+
+#' Create contamination note from eager results for poseidon
+#'
+#' Create contamination note for the sample, ignoring duplicated library entries.
+#'
+#' @param lib_ids character. The names of the libraries the contamination estimates correspond to.
+#' @param nr_snps character. The number of SNPs for the contamination estimate.
+#' @inheritParams compile_across_lib_results
+#'
+#' @return character. An appropriate Contamination_Note
+#' @export
+create_contamination_note <- function(lib_ids, nr_snps, snp_cutoff=100) {
+  x <- tibble::tibble(Library_ID=lib_ids, Contamination_NrSnps=nr_snps) %>%
+    dplyr::distinct()
+  paste0("Nr Snps (per library): ", paste(x$Contamination_NrSnps, collapse = ";"), ". Estimate and error are weighted means of values per library. Libraries with fewer than ", snp_cutoff, " were excluded.")
 }
