@@ -43,13 +43,13 @@ compile_eager_result_tables <- function(tsv_table=NULL, sexdet_table=NULL, snpco
                        unique(.data$UDG_Treatment) %>% length(.) > 1 ~ 'mixed',
                        TRUE ~ format_for_poseidon(unique(.data$UDG_Treatment), "UDG")
                      ),
-                     Nr_Libs=dplyr::n(),
+                     Nr_Libraries=dplyr::n(),
                      Capture_Type=dplyr::if_else(
                        is.na(capture_type),
                        ##TRUE
                        NA_character_,
                        ## FALSE
-                       paste0(rep(capture_type, .data$Nr_Libs), collapse=";")
+                       paste0(rep(capture_type, .data$Nr_Libraries), collapse=";")
                      ),
                      Library_Built=format_for_poseidon(.data$Strandedness, "Library_Built")
     ) %>%
