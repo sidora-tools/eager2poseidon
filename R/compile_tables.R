@@ -215,8 +215,8 @@ compile_across_lib_results <- function(x, snp_cutoff=100) {
     dplyr::summarise(
       .groups = 'keep',
       ## Contamination columns are weighted mean from libraries.
-      contamination_weighted_mean = stats::weighted.mean(.data$Contamination, .data$Contamination_NrSnps, na.rm = T),
-      contamination_weigthed_mean_err = stats::weighted.mean(.data$Contamination_Err, .data$Contamination_NrSnps, na.rm = T),
+      contamination_weighted_mean = library_unique_weighted_mean(.data$Library_ID, .data$Contamination, .data$Contamination_NrSnps, na.rm = T),
+      contamination_weigthed_mean_err = library_unique_weighted_mean(.data$Library_ID, .data$Contamination_Err, .data$Contamination_NrSnps, na.rm = T),
       sample_Contamination = dplyr::if_else(
         is.nan(.data$contamination_weighted_mean),
         #TRUE
@@ -246,7 +246,7 @@ compile_across_lib_results <- function(x, snp_cutoff=100) {
         "ANGSD"
       ),
       ## Damage is weighted mean of damage from each library
-      mean_damage = stats::weighted.mean(.data$Damage, .data$damage_num_reads, na.rm=T),
+      mean_damage = library_unique_weighted_mean(.data$Library_ID, .data$Damage, .data$damage_num_reads, na.rm=T),
       sample_Damage = dplyr::if_else(
         is.nan(.data$mean_damage),
         ## TRUE
@@ -262,7 +262,7 @@ compile_across_lib_results <- function(x, snp_cutoff=100) {
         NA_real_,
         ## FALSE
         ## For some reason, if all values are NA, this still prints out an error that it will return -Inf,
-        ##    but the endogenous valus is correctly inferred.
+        ##    but the endogenous value is correctly inferred.
         max(.data$Endogenous, na.rm=T)
         ),
       ## Keep track of libraries in the results
@@ -294,4 +294,26 @@ create_contamination_note <- function(lib_ids, nr_snps, snp_cutoff=100) {
   x <- tibble::tibble(Library_ID=lib_ids, Contamination_NrSnps=nr_snps) %>%
     dplyr::distinct()
   paste0("Nr Snps (per library): ", paste(x$Contamination_NrSnps, collapse = ";"), ". Estimate and error are weighted means of values per library. Libraries with fewer than ", snp_cutoff, " were excluded.")
+}
+
+#' Calculate the weighted mean at the library level
+#'
+#' This function calculates the weighted mean of the measures provided, given the weights provided.
+#' Should be provided the measures for one Sample_Name/Poseidon_ID at a time.
+#' Unlike stats::weighted.mean, this function first filters for distinct rows, to avoid counting duplicated results
+#' as independent observations.
+#'
+#' @param lib_ids character. The names of the libraries the measures correspond to.
+#' @param measure character. The measures to get a weighted mean for
+#' @param weight character. The weight of each measure.
+#' @param na.rm logical. Should NAs be removed from the weighted mean. passed on to stats::weighted.mean(na.rm)
+#'
+#' @return character. The weighted mean of the unique library-level measures.
+library_unique_weighted_mean <- function(lib_ids, measure, weight, na.rm = T) {
+  x <- tibble::tibble(Library_ID=lib_ids, Measure=measure, Weight=weight) %>%
+    dplyr::distinct()
+
+  result <- stats::weighted.mean(x$Measure, x$Weight, na.rm = na.rm)
+
+  result
 }
