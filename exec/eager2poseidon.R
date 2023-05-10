@@ -98,6 +98,7 @@ output_janno <- fill_in_janno(
 output_janno <- output_janno %>%
   dplyr::mutate(
     dplyr::across(
+      .cols = everything(),
       .fn = as.character
     )
   ) %>%
