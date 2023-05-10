@@ -38,12 +38,12 @@ fill_in_janno <- function(input_janno_table, external_results_table, genotype_pl
     .data$Sex_Determination_Note
     )
 
-  external_results_table <- external_results_table %>% dplyr::select(
+  filtered_external_results_table <- external_results_table %>% dplyr::select(
     -.data$Genetic_Sex,
     -.data$Sex_Determination_Note
     )
 
-  output_janno <- dplyr::full_join(janno_table, external_results_table, by = "Poseidon_ID") %>%
+  output_janno <- dplyr::full_join(janno_table, filtered_external_results_table, by = "Poseidon_ID") %>%
     dplyr::mutate(
       Collection_ID = dplyr::coalesce(.data$Collection_ID.x, .data$Collection_ID.y),
       Country = dplyr::coalesce(.data$Country.x, .data$Country.y),
@@ -74,6 +74,8 @@ fill_in_janno <- function(input_janno_table, external_results_table, genotype_pl
     dplyr::select(
       .data$Poseidon_ID,
       .data$Collection_ID,
+      ## starts_with already implies any_of (i.e. can return no columns without error)
+      tidyselect::starts_with("Relation_"),
       .data$Country,
       .data$Site,
       .data$Location,
@@ -97,9 +99,6 @@ fill_in_janno <- function(input_janno_table, external_results_table, genotype_pl
       .data$Contamination_Err,
       .data$Contamination_Meas,
       .data$Contamination_Note,
-      tidyselect::any_of(
-        tidyselect::starts_with("Relation_"),
-      ),
       tidyselect::any_of(
         c(
           "Alternative_IDs",
@@ -242,9 +241,9 @@ fill_genetic_sex <- function(input_janno_table, genetic_sex_table) {
     dplyr::mutate(
       Genetic_Sex = dplyr::coalesce(.data$Genetic_Sex.x, .data$Genetic_Sex.y),
       Sex_Determination_Note = dplyr::case_when(
-        old_gsex == "U" && Genetic_Sex != "U" ~ .data$Sex_Determination_Note.y,
-        old_gsex == "U" && Genetic_Sex == "U" ~ dplyr::coalesce(.data$Sex_Determination_Note.x, .data$Sex_Determination_Note.y),
-        old_gsex != "U" ~ .data$Sex_Determination_Note.x,
+        .data$old_gsex == "U" & .data$Genetic_Sex != "U" ~ .data$Sex_Determination_Note.y,
+        .data$old_gsex == "U" & .data$Genetic_Sex == "U" ~ ifelse( is.na(.data$Sex_Determination_Note.x), .data$Sex_Determination_Note.y, .data$Sex_Determination_Note.x),
+        .data$old_gsex != "U" ~ .data$Sex_Determination_Note.x,
         TRUE ~ "n/a"
       )
     ) %>%

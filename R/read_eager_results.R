@@ -233,14 +233,20 @@ read_eager_stats_table <- function(general_stats_fn, tsv_data, snp_cutoff = 50) 
   } else {
     endogenous_per_sample <- dplyr::right_join(general_stats, tsv_data %>% dplyr::filter(.data$Seq_Type == "Shotgun"), by = c("Sample" = "Library_ID")) %>%
       tidyr::separate(.data$Sample, sep = "\\.", into = c("Sample", "Library"), fill = "right", extra = "merge") %>%
-      dplyr::group_by(.data$Sample) %>%
+      dplyr::group_by(.data$Sample_Name) %>%
       dplyr::summarise(
         Endogenous = max(.data$endogenous_dna)
+      ) %>%
+      dplyr::rename(
+        Sample=.data$Sample_Name
       )
   }
 
   ## Library info for library based fields
   contamination_per_sample <- general_stats %>%
+    ## Join to eager tsv data to keep track of sample names in cases where '_' are used in sample names.
+    dplyr::right_join(., tsv_data, by = c("Sample" = "Library_ID")) %>%
+    dplyr::mutate("tsv_Library"=.data$Library, .keep="unused") %>%
     tidyr::separate(.data$Sample, sep = "\\.", into = c("Sample", "Library"), fill = "right", extra = "merge") %>%
     dplyr::filter(!is.na(.data$Library)) %>%
     dplyr::mutate(
@@ -256,25 +262,39 @@ read_eager_stats_table <- function(general_stats_fn, tsv_data, snp_cutoff = 50) 
       )
     ) %>%
     ## Keep only Library Entries
-    dplyr::group_by(.data$Sample) %>%
+    dplyr::group_by(.data$Sample_Name) %>%
     dplyr::summarise(
       ## Take weighted mean of contamination and error (technically it doesnt make sense for the error, but that's what we have.)
       contamination_weighted_mean = stats::weighted.mean(.data$x_contamination, .data$filtered_mapped_reads, na.rm = T),
       contamination_weigthed_mean_err = stats::weighted.mean(.data$x_contamination_error, .data$filtered_mapped_reads, na.rm = T),
       Contamination = dplyr::if_else(is.nan(.data$contamination_weighted_mean), NA_character_, .data$contamination_weighted_mean %>%
-        format(., nsmall = 3, digits = 0, trim = T)), ## Change to type 'char' and format to three decimals
+                         sprintf("%.3f", .)), ## Change to type 'char' and format to three decimals
       Contamination_Err = dplyr::if_else(is.nan(.data$contamination_weigthed_mean_err), NA_character_, .data$contamination_weigthed_mean_err %>%
-        format(., nsmall = 3, digits = 0, trim = T)), ## Change to type 'char' and format to three decimals
+                        sprintf("%.3f", .)), ## Change to type 'char' and format to three decimals
       Contamination_Meas = dplyr::if_else(is.na(.data$Contamination), NA_character_, paste("ANGSD")),
       Contamination_Note = dplyr::if_else(is.na(.data$Contamination), NA_character_, paste0("Nr Snps (per library): ", paste(.data$x_contamination_snps, collapse = ";"), ". Estimate and error are weighted means of values per library. Libraries with fewer than ", snp_cutoff, " were excluded."))
     ) %>%
-    dplyr::select(-.data$contamination_weighted_mean, -.data$contamination_weigthed_mean_err)
+    dplyr::select(-.data$contamination_weighted_mean, -.data$contamination_weigthed_mean_err) %>%
+    dplyr::rename(
+      Sample=.data$Sample_Name
+    )
 
   ## For the rest use everything
   sample_stats <- general_stats %>%
+    ## Join to eager tsv data to keep track of sample names in cases where '_' are used in sample names.
+    dplyr::full_join(., tsv_data, by = c("Sample" = "Library_ID")) %>%
+    ## Rename TSV library name column to keep both just in case.
+    dplyr::rename("tsv_Library"=.data$Library) %>%
+    ## When the Sample is already a Sample_Name, and not Library_ID, fill that in
+    dplyr::mutate(
+      Sample_Name=dplyr::case_when(
+        is.na(.data$Sample_Name) ~ .data$Sample,
+        TRUE ~ .data$Sample_Name
+      )
+    ) %>%
     tidyr::separate(.data$Sample, sep = "\\.", into = c("Sample", "Library"), fill = "right", extra = "merge") %>%
     dplyr::mutate(filtered_mapped_reads = dplyr::na_if(.data$filtered_mapped_reads, 0)) %>%
-    dplyr::group_by(.data$Sample) %>%
+    dplyr::group_by(.data$Sample_Name) %>%
     dplyr::summarise(
       ## Sexdet stats are tricky cause they can be at sample or library level. Using `first` should always prefer sample level if mor than one exists.
       x_rate = dplyr::first(stats::na.omit(.data$sexdet_rate_x)),
@@ -287,22 +307,25 @@ read_eager_stats_table <- function(general_stats_fn, tsv_data, snp_cutoff = 50) 
     ) %>%
     dplyr::mutate(
       Sex_Determination_Note = paste0("x-rate: ",
-                    format(.data$x_rate, nsmall = 3, digits = 0, trim = T),
+                    sprintf("%.3f", .data$x_rate),
                     " +- ",
-                    format(.data$x_err, nsmall = 3, digits = 0, trim = T),
+                    sprintf("%.3f", .data$x_err),
                     ", y-rate: ",
-                    format(.data$y_rate, nsmall = 3, digits = 0, trim = T),
+                    sprintf("%.3f", .data$y_rate),
                     " +- ",
-                    format(.data$y_err, nsmall = 3, digits = 0, trim = T)
+                    sprintf("%.3f", .data$y_err)
                     )
     ) %>%
     dplyr::select(
-      .data$Sample,
+      .data$Sample_Name,
       .data$Genetic_Sex,
       .data$Damage,
       .data$Nr_SNPs,
       .data$Sex_Determination_Note
-      )
+      ) %>%
+    dplyr::rename(
+      Sample=.data$Sample_Name
+    )
 
   ## Join it all together
   result <- dplyr::full_join(sample_stats, endogenous_per_sample, by = "Sample") %>%
