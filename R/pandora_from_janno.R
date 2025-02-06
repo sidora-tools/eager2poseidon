@@ -4,7 +4,7 @@
 #' the port of the database server, user and password, respectively.
 #' Passed to \link[sidora.core:get_pandora_connection]{get_pandora_connection}
 #' @param trust_uncalibrated_dates logical. Should any uncalibrated dates in pandora be trusted?
-#' If set to TRUE, then \link[poseidonR:quickcalibrate]{quickcalibrate()} is used to calibrate these dates on the fly.
+#' If set to TRUE, then \link[janno:quickcalibrate]{quickcalibrate()} is used to calibrate these dates on the fly.
 #' @param sample_ids character. A vector of the Poseidon_IDs to pull from pandora.
 #'
 #' @return A tibble containing the poseidon janno fields of
@@ -32,7 +32,12 @@ import_pandora_data <- function(sample_ids, credentials, trust_uncalibrated_date
       Location = dplyr::if_else(.data$site.Locality == "", NA_character_, .data$site.Locality),
       Longitude = .data$site.Longitude,
       Latitude = .data$site.Latitude,
-      Date_C14_Labnr = dplyr::na_if(.data$individual.C14_Id, ""),
+      c14_code = case_when(
+        .data$individual.C14_Id_Lab %in% c("", NA) ~ NA_integer_,
+        .data$individual.C14_Id %in% c("", NA) ~ NA_integer_,
+        TRUE ~ paste0(.data$individual.C14_Id_Lab,"-",.data$individual.C14_Id)
+      ),
+      Date_C14_Labnr = c14_code,
       Date_BC_AD_Start_pandora = dplyr::case_when(
         ## If no C14 ID is given in pandora, don't trust the Calibrated date field, else take it as is.
         .data$Date_C14_Labnr %in% c("", NA) ~ NA_integer_,
@@ -80,7 +85,7 @@ import_pandora_data <- function(sample_ids, credentials, trust_uncalibrated_date
         Date_C14_Uncal_BP = dplyr::if_else(.data$Date_C14_Labnr %in% c("", NA), NA_integer_, .data$individual.C14_Uncalibrated),
         Date_C14_Uncal_BP_Err = dplyr::if_else(.data$Date_C14_Labnr %in% c("", NA), NA_integer_, .data$individual.C14_Uncalibrated_Variation),
         ## Only use calibration values if calibrated values are not in pandora
-        poseidonR::quickcalibrate(
+        janno::quickcalibrate(
           .data$Date_C14_Uncal_BP,
           .data$Date_C14_Uncal_BP_Err,
           select_calibration_curve(.data$site.Latitude),

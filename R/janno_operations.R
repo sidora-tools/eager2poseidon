@@ -131,14 +131,14 @@ fill_in_janno <- function(input_janno_table, external_results_table, genotype_pl
 #'
 #' Read a janno file into a tibble with standardised data types, and update the column names to poseidon v2.5.0 if necessary
 #'
-#' @param janno_fn A tibble Path to the source .janno file. Passed to \link[poseidonR:janno]{read_janno}
+#' @param janno_fn A tibble Path to the source .janno file. Passed to \link[janno:janno]{read_janno}
 #'
 #' @return A list containing the standardised janno tibble and a tibble with the sample Ids of the janno table
 #' @export
 standardise_janno <- function(janno_fn) {
 
   ## Read janno and normalise column names for Individual/Poseidon IDs
-  input_janno <- poseidonR::read_janno(janno_fn, to_janno = F, validate = F) %>%
+  input_janno <- janno::read_janno(janno_fn, to_janno = F, validate = F) %>%
     dplyr::mutate(
       dplyr::across(
         .cols = tidyselect::any_of(c(

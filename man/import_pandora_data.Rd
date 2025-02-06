@@ -14,7 +14,7 @@ the port of the database server, user and password, respectively.
 Passed to \link[sidora.core:get_pandora_connection]{get_pandora_connection}}
 
 \item{trust_uncalibrated_dates}{logical. Should any uncalibrated dates in pandora be trusted?
-If set to TRUE, then \link[poseidonR:quickcalibrate]{quickcalibrate()} is used to calibrate these dates on the fly.}
+If set to TRUE, then \link[janno:quickcalibrate]{quickcalibrate()} is used to calibrate these dates on the fly.}
 }
 \value{
 A tibble containing the poseidon janno fields of

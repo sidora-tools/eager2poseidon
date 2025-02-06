@@ -8,12 +8,12 @@ Description: Fills in the janno file of a Poseidon package with information from
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.2
+RoxygenNote: 7.3.2
 Imports: 
     DBI,
     dplyr,
     magrittr,
-    poseidonR,
+    janno,
     readr,
     rlang,
     sidora.core,
@@ -22,7 +22,8 @@ Imports:
     tibble,
     tidyr,
     tidyselect,
-    vctrs
+    vctrs,
+    optparse
 Remotes: 
     sidora-tools/sidora.core,
     poseidon-framework/poseidonR@99f1e9c9954d9b7e79e796c24e90036f2576a112

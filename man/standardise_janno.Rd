@@ -7,7 +7,7 @@
 standardise_janno(janno_fn)
 }
 \arguments{
-\item{janno_fn}{A tibble Path to the source .janno file. Passed to \link[poseidonR:janno]{read_janno}}
+\item{janno_fn}{A tibble Path to the source .janno file. Passed to \link[janno:janno]{read_janno}}
 }
 \value{
 A list containing the standardised janno tibble and a tibble with the sample Ids of the janno table

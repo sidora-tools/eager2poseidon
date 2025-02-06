@@ -32,7 +32,7 @@ If set to 'single; or 'double', will keep only information for libraries with th
 If 'none', all information is retained.}
 
 \item{trust_uncalibrated_dates}{logical. Should any uncalibrated dates in pandora be trusted?
-If set to TRUE, then \link[poseidonR:quickcalibrate]{quickcalibrate()} is used to calibrate these dates on the fly.}
+If set to TRUE, then \link[janno:quickcalibrate]{quickcalibrate()} is used to calibrate these dates on the fly.}
 
 \item{snp_cutoff}{integer. The minimum number of SNPs used for nuclear contamination results, for the results to be
 considered trustworthy. Any values from libraries with fewer than this number of SNPs are ignored.}
