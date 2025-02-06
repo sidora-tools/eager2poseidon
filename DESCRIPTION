@@ -24,6 +24,8 @@ Imports:
     tidyselect,
     vctrs,
     optparse
+Enhances:
+    eagerR
 Remotes: 
     sidora-tools/sidora.core,
     poseidon-framework/poseidonR@99f1e9c9954d9b7e79e796c24e90036f2576a112

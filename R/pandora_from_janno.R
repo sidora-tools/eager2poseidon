@@ -32,12 +32,12 @@ import_pandora_data <- function(sample_ids, credentials, trust_uncalibrated_date
       Location = dplyr::if_else(.data$site.Locality == "", NA_character_, .data$site.Locality),
       Longitude = .data$site.Longitude,
       Latitude = .data$site.Latitude,
-      c14_code = case_when(
+      c14_code = dplyr::case_when(
         .data$individual.C14_Id_Lab %in% c("", NA) ~ NA_integer_,
         .data$individual.C14_Id %in% c("", NA) ~ NA_integer_,
         TRUE ~ paste0(.data$individual.C14_Id_Lab,"-",.data$individual.C14_Id)
       ),
-      Date_C14_Labnr = c14_code,
+      Date_C14_Labnr = .data$c14_code,
       Date_BC_AD_Start_pandora = dplyr::case_when(
         ## If no C14 ID is given in pandora, don't trust the Calibrated date field, else take it as is.
         .data$Date_C14_Labnr %in% c("", NA) ~ NA_integer_,
